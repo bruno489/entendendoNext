@@ -1,5 +1,11 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+#TypeScript
+out/
+# TS -incremental file
+tsconfig.tsbuildinfo
+node_modules
+
 # dependencies
 /node_modules
 /.pnp
