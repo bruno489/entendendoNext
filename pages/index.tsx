@@ -112,9 +112,7 @@ function Users({ modelosDB }: Props): JSX.Element {
       }
       setUsuario(usuarioVindo)
       if (!retorno.data) message.error('Usuário não encontrado');
-      console.log('qualquer coisa escrita')
-      console.log(retorno.data)
-
+      
     }).catch((erro) => {
 
       console.log(erro)
@@ -125,8 +123,8 @@ function Users({ modelosDB }: Props): JSX.Element {
   useEffect(() => {
     if (!usuario) return
     cadastros.setFieldsValue(usuario)
-
-  }, [usuario])
+    console.log('tá chegando do useEffect')
+  }, [usuario,cadastros])
 
 
   const deletar = async () => {
@@ -222,10 +220,13 @@ function Users({ modelosDB }: Props): JSX.Element {
 
 
   const onEditDispositivo=(record)=>{
+    console.log('usuario antes add')
+    console.log(usuario)
     console.log('record interno')
     console.log(record)
     setDispositivo(record)
     showModalEdit()
+    
   }
 
   const addDispositivo= async (valores)=>{
@@ -235,6 +236,7 @@ function Users({ modelosDB }: Props): JSX.Element {
     const novoDispositivo = await axios.post(`http://localhost:3002/novoDispositivo`,{valores}).then((retorno) => {
       message.success({ content: 'Dispositivo cadastrado com sucesso!', key, duration: 2 });
       console.log(retorno)
+      setModalAdd(false);
       return retorno.data
     }).catch((erro) => {
       message.error('Falha ao deletar o usuário, tente novamente.');
@@ -255,17 +257,18 @@ function Users({ modelosDB }: Props): JSX.Element {
       id: usuario.id
     }
     
-    console.log('usuario')
-    console.log(usuario)
+    
     console.log('novoUsuario')
     console.log(novoUsuario)
 
     setUsuario(novoUsuario)
-    
+    console.log('usuario apos add')
+    console.log(usuario)
   }
 
   const getNomeModelo=(inputValue, option)=>{
     setModelos(option.children)
+    console.log('nome')
     console.log(option.children)
   }
 
