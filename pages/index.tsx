@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react"
 import { Form, Input, Button, Select, message, Row, Popconfirm, Modal, Tooltip, Space, Table, Switch } from 'antd'
 import MaskedInput from 'antd-mask-input'
-import axios from 'axios'
 import { SearchOutlined, DeleteFilled, PlusSquareOutlined, CheckOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons'
 import { FormDefault, ColDefault, FormItemDefault, TitleDefault, GreenButton } from '../styles/Form.styles'
 import { GetServerSideProps } from "next"
 import { LoadSSRProps } from '../src/loadSsrProps'
+import api from '../src/backendApi'
 
 interface usuario {
   id: string;
@@ -41,8 +41,8 @@ interface Props {
 
 function Users({ modelosDB }: Props): JSX.Element {
   
-  console.log('Modelos')
-  console.log(modelosDB)
+  // console.log('Modelos')
+  // console.log(modelosDB)
 
   const { Search } = Input;
   const { Option } = Select;
@@ -52,6 +52,7 @@ function Users({ modelosDB }: Props): JSX.Element {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [ModalAdd, setModalAdd] = useState(false);
   const [modelo,setModelos]=useState()
+  const [tabelaDispositivos, setTabelaDispositivos] = useState<Array<infosDisp>>([])
   const [dispositivo, setDispositivo ] = useState<infosDisp>(undefined)
   const [modalEdit, setModalEdit] = useState(false);
 
@@ -101,7 +102,9 @@ function Users({ modelosDB }: Props): JSX.Element {
   };
 
   const achaUser = async () => {
-    await axios.get(`http://localhost:3002/usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`).then((retorno) => {
+    // await axios.get(`http://localhost:3002/usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`)
+    await api.get(`usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`)
+    .then((retorno) => {
       const usuarioVindo = {
         id: retorno.data._id,
         nome: retorno.data.nome,
@@ -124,17 +127,19 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   useEffect(() => {
     if (!usuario) return
+    console.log("Useeffect do usuário...")
     cadastros.setFieldsValue(usuario)
-
+    console.log(usuario.dispositivos)
+    
   }, [usuario])
 
 
   const deletar = async () => {
     message.loading({ content: 'Um momento, por favor...', key });
-    await axios.delete(`http://localhost:3002/usuarios/${cadastros.getFieldValue("id")}`).then((retorno) => {
+    await api.delete(`usuarios/${cadastros.getFieldValue("id")}`)
+    .then((retorno) => {
       message.success({ content: 'Usuário deletado com sucesso!', key, duration: 2 });
       cadastros.resetFields()
-      console.log(retorno)
     }).catch((erro) => {
       message.error('Falha ao deletar o usuário, tente novamente.');
       console.log(erro)
@@ -157,7 +162,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
     if (valores.id) {
       message.loading({ content: 'Um momento, por favor...', key });
-      await axios.put(`http://localhost:3002/usuarios/${valores.id}`, novoUser).then((retorno) => {
+      await api.put(`usuarios/${valores.id}`, novoUser).then((retorno) => {
         console.log(retorno)
         message.success({ content: 'Alterado com sucesso!', key, duration: 2 });
         cadastros.resetFields()
@@ -167,7 +172,7 @@ function Users({ modelosDB }: Props): JSX.Element {
       })
     } else {
       message.loading({ content: 'Um momento, por favor...', key });
-      await axios.post('http://localhost:3001/novoUsuario', novoUser).then((retorno) => {
+      await api.post('novoUsuario', novoUser).then((retorno) => {
         message.success({ content: 'Cadastrado com sucesso!', key, duration: 2 });
         cadastros.resetFields()
         console.log(retorno)
@@ -229,12 +234,15 @@ function Users({ modelosDB }: Props): JSX.Element {
   }
 
   const addDispositivo= async (valores)=>{
-    console.log('Valores:')
-    console.log(valores)
     valores.itens = []
-    const novoDispositivo = await axios.post(`http://localhost:3002/novoDispositivo`,{valores}).then((retorno) => {
+
+    console.log('usuario')
+    console.log(usuario)
+
+    // const novoDispositivo = await axios.post(`http://localhost:3001/novoDispositivo`,{valores}).then((retorno) => {
+    const novoDispositivo = await api.post(`novoDispositivo`,{valores}).then((retorno) => {
       message.success({ content: 'Dispositivo cadastrado com sucesso!', key, duration: 2 });
-      console.log(retorno)
+      console.log(retorno.data)
       return retorno.data
     }).catch((erro) => {
       message.error('Falha ao deletar o usuário, tente novamente.');
@@ -244,9 +252,8 @@ function Users({ modelosDB }: Props): JSX.Element {
 
     const dispositivosAtuais = usuario.dispositivos || []
     if(novoDispositivo) dispositivosAtuais.push(novoDispositivo)
-    
-    const novoUsuario = {
 
+    const novoUsuario = {
       nome: usuario.nome,
       fone: usuario.fone,
       email: usuario.email,
@@ -254,19 +261,15 @@ function Users({ modelosDB }: Props): JSX.Element {
       senha: usuario.senha,
       id: usuario.id
     }
-    
-    console.log('usuario')
-    console.log(usuario)
+
     console.log('novoUsuario')
     console.log(novoUsuario)
-
-    setUsuario(novoUsuario)
     
+    setUsuario(novoUsuario)
   }
 
   const getNomeModelo=(inputValue, option)=>{
     setModelos(option.children)
-    console.log(option.children)
   }
 
   async function onDeleteDispositivo(record) {
@@ -476,7 +479,7 @@ function Users({ modelosDB }: Props): JSX.Element {
               ...rowSelection,
             }}
             columns={columns}
-            dataSource={usuario?.dispositivos}
+            dataSource={[...usuario.dispositivos]}
           />
 
         </ColDefault>
@@ -496,6 +499,14 @@ function Users({ modelosDB }: Props): JSX.Element {
 
           <Button onClick={cancelar}>
             Cancelar
+          </Button>
+          <Button onClick={() => {
+            console.log("=-=-=-=-=-=-=-=-=-=-=-")
+            console.log("usuario:")
+            console.log(usuario)
+            console.log("=-=-=-=-=-=-=-=-=-=-=-")
+          }}>
+            Mostrar Usuário
           </Button>
 
         </FormItemDefault>
