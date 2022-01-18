@@ -475,7 +475,7 @@ function Users({ modelosDB }: Props): JSX.Element {
               ...rowSelection,
             }}
             columns={columns}
-            dataSource={[...usuario?.dispositivos]}
+            dataSource={usuario ? [...usuario?.dispositivos] : []}
           />
 
         </ColDefault>
