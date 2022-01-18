@@ -36,12 +36,13 @@ interface infosDisp {
 }
 
 interface Props {
-  dispositivos: Array<infosDisp>
+  modelosDB: Array<infosDisp>
 }
 
-function Users({ dispositivos }: Props): JSX.Element {
-  console.log(dispositivos)
-  console.log('dispositivos')
+function Users({ modelosDB }: Props): JSX.Element {
+  
+  console.log('Modelos')
+  console.log(modelosDB)
 
   const { Search } = Input;
   const { Option } = Select;
@@ -173,7 +174,7 @@ function Users({ dispositivos }: Props): JSX.Element {
     },
     {
       title: 'Modelo',
-      dataIndex: 'modelo.nome',
+      dataIndex: ['modelo', 'nome'],
       key:'modelo.nome'
     },
     {
@@ -357,9 +358,10 @@ function Users({ dispositivos }: Props): JSX.Element {
                     label="Modelo"
                     name="idModelo"
                     rules={[{ required: true, message: 'Por favor, digite um id.' }]}
+                    initialValue="Modelo"
                   >
-                    <Select defaultValue="Modelo" onChange={getNomeModelo} style={{ width: '100%' }}>
-                      {dispositivos.map((modelo) => {
+                    <Select onChange={getNomeModelo} style={{ width: '100%' }}>
+                      {modelosDB?.map((modelo) => {
                         return (<Option key={modelo._id} value={modelo._id}>{modelo.nome}</Option>)
                       })
                       }
@@ -431,10 +433,10 @@ function Users({ dispositivos }: Props): JSX.Element {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
-    const dispositivos = await LoadSSRProps('todosDispositivos', context)
+    const modelosDB = await LoadSSRProps('todosModelos', context)
     return {
       props: {
-        dispositivos,
+        modelosDB,
       },
     }
   } catch (error) {
