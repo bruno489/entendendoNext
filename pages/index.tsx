@@ -51,8 +51,9 @@ function Users({ modelosDB }: Props): JSX.Element {
   const [usuario, setUsuario] = useState<usuario>()
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [ModalAdd, setModalAdd] = useState(false);
-  const [modelos,setModelos]=useState()
-  const [dispositivo, setDispositivo ] = useState()
+  const [modelo,setModelos]=useState()
+  const [dispositivo, setDispositivo ] = useState<infosDisp>(undefined)
+  const [modalEdit, setModalEdit] = useState(false);
 
   let key = 'updatable'
 
@@ -87,8 +88,20 @@ function Users({ modelosDB }: Props): JSX.Element {
     setModalAdd(false);
   };
 
+  const handleOkEdit = () => {
+    setModalEdit(false);
+  };
+
+  const handleCancelEdit = () => {
+    setModalEdit(false);
+  };
+
+  const showModalEdit = () => {
+    setModalEdit(true);
+  };
+
   const achaUser = async () => {
-    await axios.get(`http://localhost:3001/usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`).then((retorno) => {
+    await axios.get(`http://localhost:3002/usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`).then((retorno) => {
       const usuarioVindo = {
         id: retorno.data._id,
         nome: retorno.data.nome,
@@ -118,7 +131,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   const deletar = async () => {
     message.loading({ content: 'Um momento, por favor...', key });
-    await axios.delete(`http://localhost:3001/usuarios/${cadastros.getFieldValue("id")}`).then((retorno) => {
+    await axios.delete(`http://localhost:3002/usuarios/${cadastros.getFieldValue("id")}`).then((retorno) => {
       message.success({ content: 'Usuário deletado com sucesso!', key, duration: 2 });
       cadastros.resetFields()
       console.log(retorno)
@@ -144,7 +157,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
     if (valores.id) {
       message.loading({ content: 'Um momento, por favor...', key });
-      await axios.put(`http://localhost:3001/usuarios/${valores.id}`, novoUser).then((retorno) => {
+      await axios.put(`http://localhost:3002/usuarios/${valores.id}`, novoUser).then((retorno) => {
         console.log(retorno)
         message.success({ content: 'Alterado com sucesso!', key, duration: 2 });
         cadastros.resetFields()
@@ -209,15 +222,17 @@ function Users({ modelosDB }: Props): JSX.Element {
 
 
   const onEditDispositivo=(record)=>{
-    console.log('record')
+    console.log('record interno')
     console.log(record)
+    setDispositivo(record)
+    showModalEdit()
   }
 
   const addDispositivo= async (valores)=>{
     console.log('Valores:')
     console.log(valores)
     valores.itens = []
-    const novoDispositivo = await axios.post(`http://localhost:3001/novoDispositivo`,{valores}).then((retorno) => {
+    const novoDispositivo = await axios.post(`http://localhost:3002/novoDispositivo`,{valores}).then((retorno) => {
       message.success({ content: 'Dispositivo cadastrado com sucesso!', key, duration: 2 });
       console.log(retorno)
       return retorno.data
@@ -239,7 +254,7 @@ function Users({ modelosDB }: Props): JSX.Element {
       senha: usuario.senha,
       id: usuario.id
     }
-    // usuarioNovo.dispositivos.push(novoDispositivos)
+    
     console.log('usuario')
     console.log(usuario)
     console.log('novoUsuario')
@@ -294,7 +309,6 @@ function Users({ modelosDB }: Props): JSX.Element {
         form={cadastros}
         onFinish={setValues}
         {...layout}
-
       >
 
         <ColDefault style={{ paddingTop: '40px', paddingBottom: '40px' }}>
@@ -350,6 +364,50 @@ function Users({ modelosDB }: Props): JSX.Element {
             >
               <Search placeholder="Procurar usuário" onSearch={handleOk} enterButton />
             </Form.Item>
+          </Modal>
+          <Modal title="Editar" visible={modalEdit} onOk={handleOkEdit} onCancel={handleCancelEdit}>
+                <FormDefault
+                  name="formEditDispositivo"
+                  initialValues={{ remember: false }}
+                  autoComplete="off"
+                  onFinish={addDispositivo}
+                  labelCol={{ span: 4 }}
+                  wrapperCol={{ span: 20 }}
+                >
+                  <FormItemDefault
+                    label="Nome"
+                    name='nome'
+                    rules={[{ required: true, message: 'Por favor, digite um E-mail.' }]}
+                    initialValue={dispositivo?.nome}
+                  >
+                    <Input placeholder="Nome"/>
+
+                  </FormItemDefault>
+                  <FormItemDefault
+                    label="Modelo"
+                    name="idModelo"
+                    rules={[{ required: true, message: 'Por favor, digite um id.' }]}
+                    initialValue={{value:dispositivo?.modelo._id, key:dispositivo?.modelo.nome}}
+                  >
+                    <Select onChange={getNomeModelo} style={{ width: '100%' }}>
+                      {modelosDB?.map((modelo) => {
+                        return (<Option key={modelo._id} value={modelo._id}>{modelo.nome}</Option>)
+                      })
+                      }
+                    </Select>
+                  </FormItemDefault>
+                  <FormItemDefault
+                    name='ativo'
+                    label='Ativo'
+                    style={{ width: '150px', marginLeft: '5px' }}
+                    labelCol={{ span: 15 }}
+                    wrapperCol={{ span: 9 }}
+                    valuePropName="checked"
+                    initialValue={true}
+                  >
+                    <Switch checkedChildren={<CheckOutlined />} unCheckedChildren={<CloseOutlined />} defaultChecked />
+                  </FormItemDefault>
+                </FormDefault>
           </Modal>
           <Modal title="Adicionar" visible={ModalAdd} onOk={handleOkAdd} onCancel={handleCancelAdd}>
             <Row >
