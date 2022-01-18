@@ -41,9 +41,6 @@ interface Props {
 
 function Users({ modelosDB }: Props): JSX.Element {
   
-  // console.log('Modelos')
-  // console.log(modelosDB)
-
   const { Search } = Input;
   const { Option } = Select;
   const [cadastros] = Form.useForm()
@@ -52,7 +49,6 @@ function Users({ modelosDB }: Props): JSX.Element {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [ModalAdd, setModalAdd] = useState(false);
   const [modelo,setModelos]=useState()
-  const [tabelaDispositivos, setTabelaDispositivos] = useState<Array<infosDisp>>([])
   const [dispositivo, setDispositivo ] = useState<infosDisp>(undefined)
   const [modalEdit, setModalEdit] = useState(false);
 
