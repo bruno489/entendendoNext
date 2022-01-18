@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 import { Form, Input, Button, Select, message, Row, Popconfirm, Modal, Tooltip, Space, Table, Switch } from 'antd'
 import MaskedInput from 'antd-mask-input'
 import axios from 'axios'
-import { SearchOutlined, DeleteFilled, PlusSquareOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
+import { SearchOutlined, DeleteFilled, PlusSquareOutlined, CheckOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons'
 import { FormDefault, ColDefault, FormItemDefault, TitleDefault, GreenButton } from '../styles/Form.styles'
 import { GetServerSideProps } from "next"
 import { LoadSSRProps } from '../src/loadSsrProps'
@@ -52,6 +52,7 @@ function Users({ modelosDB }: Props): JSX.Element {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [ModalAdd, setModalAdd] = useState(false);
   const [modelos,setModelos]=useState()
+  const [dispositivo, setDispositivo ] = useState()
 
   let key = 'updatable'
 
@@ -182,7 +183,7 @@ function Users({ modelosDB }: Props): JSX.Element {
       dataIndex: 'Itens',
     },
     {
-      title: 'Excluir dispositivo',
+      title: 'Excluir',
       dataIndex: 'excluir',
       render: (nome, record) => (
         <Button onClick={() => {
@@ -192,8 +193,24 @@ function Users({ modelosDB }: Props): JSX.Element {
         </Button>
       )
     },
+    {
+      title: 'Editar',
+      dataIndex: 'editar',
+      render: (nome, record) => (
+        <Button onClick={() => {
+          onEditDispositivo(record)
+        }} style={{ color: "yellow" }}>
+          <EditOutlined />
+        </Button>
+      )
+    },
 
   ];
+
+  const onEditDispositivo=(record)=>{
+    console.log('record')
+    console.log(record)
+  }
 
   const addDispositivo=(valores)=>{
     let usuarioNovo = usuario
@@ -227,8 +244,6 @@ function Users({ modelosDB }: Props): JSX.Element {
     console.log(usuario)
     console.log('novoUsuario')
     console.log(novoUsuario)
-    setUsuario(usuarioNovo)
-    
     
   }
 
