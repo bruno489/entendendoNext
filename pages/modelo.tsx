@@ -30,7 +30,7 @@ export default function Modelo(){
     console.log(infosModelo)
     message.loading({ content: 'Um momento, por favor...', key });
     if(cadModelos.getFieldValue('_id')!=undefined){
-      await axios.put(`http://localhost:3002/modelos/${cadModelos.getFieldValue('_id')}`,infosModelo).then((retorno)=>{
+      await axios.put(`http://localhost:3001/modelos/${cadModelos.getFieldValue('_id')}`,infosModelo).then((retorno)=>{
         console.log(retorno)
         cadModelos.resetFields()
         message.success({ content: 'Editado com sucesso!', key });
@@ -39,7 +39,7 @@ export default function Modelo(){
         console.log(retorno)
       })
     }else{
-      await axios.post('http://localhost:3002/novoModelo',infosModelo).then((retorno)=>{
+      await axios.post('http://localhost:3001/novoModelo',infosModelo).then((retorno)=>{
         console.log(retorno)
         cadModelos.resetFields()
         message.success({ content: 'Cadastrado com sucesso!', key });
@@ -53,7 +53,7 @@ export default function Modelo(){
 
   async function onSearch(){
     message.loading({ content: 'Um momento, por favor...', key });
-    await axios.get(`http://localhost:3002/modelos/${cadModelos.getFieldValue('nome')}`).then((retorno)=>{
+    await axios.get(`http://localhost:3001/modelos/${cadModelos.getFieldValue('nome')}`).then((retorno)=>{
       setModelo(retorno.data)
       message.success({ content: 'Encontrado com sucesso!', key });
     }).catch((retorno)=>{
@@ -65,7 +65,7 @@ export default function Modelo(){
   async function deletar() {
     console.log(cadModelos.getFieldValue('_id'))
     message.loading({ content: 'Um momento, por favor...', key });
-    await axios.delete(`http://localhost:3002/modelos/${cadModelos.getFieldValue('_id')}`).then(()=>{
+    await axios.delete(`http://localhost:3001/modelos/${cadModelos.getFieldValue('_id')}`).then(()=>{
       message.success({ content: 'Deletado com sucesso.', key });
       cadModelos.resetFields()
     }).catch((retorno)=>{

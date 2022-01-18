@@ -54,7 +54,7 @@ function Users({ modelos }: Props): JSX.Element {
   let key = 'updatable'
 
   const achaUser = async () => {
-    await axios.get(`http://localhost:3002/dispositivos/${cadastros.getFieldValue("nome")}`).then((retorno) => {
+    await axios.get(`http://localhost:3001/dispositivos/${cadastros.getFieldValue("nome")}`).then((retorno) => {
       const dispositivo:dispositivo = {
         idDisp: retorno.data._id,
         nome: retorno.data.nome,
@@ -90,7 +90,7 @@ function Users({ modelos }: Props): JSX.Element {
 
   const deletar = async () => {
     message.loading({ content: 'Um momento, por favor...', key });
-    await axios.delete(`http://localhost:3002/dispositivo/${cadastros.getFieldValue("idDisp")}`).then((retorno) => {
+    await axios.delete(`http://localhost:3001/dispositivo/${cadastros.getFieldValue("idDisp")}`).then((retorno) => {
       message.success({ content: 'Usuário deletado com sucesso!', key, duration: 2 });
       cadastros.resetFields()
       console.log(retorno)
@@ -115,7 +115,7 @@ function Users({ modelos }: Props): JSX.Element {
 
     if (valores.idDisp) {
       message.loading({ content: 'Um momento, por favor...', key });
-      await axios.put(`http://localhost:3002/dispositivos/${valores.idDisp}`, novoDispositivo).then((retorno) => {
+      await axios.put(`http://localhost:3001/dispositivos/${valores.idDisp}`, novoDispositivo).then((retorno) => {
         console.log(retorno)
         const retornoCadastro:infoCadast={
           senha:retorno.data.senha,
@@ -130,7 +130,7 @@ function Users({ modelos }: Props): JSX.Element {
       })
     } else {
       message.loading({ content: 'Um momento, por favor...', key });
-      await axios.post('http://localhost:3002/novoDispositivo', novoDispositivo).then((retorno) => {
+      await axios.post('http://localhost:3001/novoDispositivo', novoDispositivo).then((retorno) => {
         const retornoCadastro:infoCadast={
           senha:retorno.data.senha,
           nrSerie:retorno.data.nrSerie
