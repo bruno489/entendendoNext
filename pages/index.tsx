@@ -87,7 +87,7 @@ function Users({ modelosDB }: Props): JSX.Element {
   };
 
   const achaUser = async () => {
-    await axios.get(`http://localhost:3002/usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`).then((retorno) => {
+    await axios.get(`http://localhost:3001/usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`).then((retorno) => {
       const usuarioVindo = {
         id: retorno.data._id,
         nome: retorno.data.nome,
@@ -117,7 +117,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   const deletar = async () => {
     message.loading({ content: 'Um momento, por favor...', key });
-    await axios.delete(`http://localhost:3002/usuarios/${cadastros.getFieldValue("id")}`).then((retorno) => {
+    await axios.delete(`http://localhost:3001/usuarios/${cadastros.getFieldValue("id")}`).then((retorno) => {
       message.success({ content: 'Usuário deletado com sucesso!', key, duration: 2 });
       cadastros.resetFields()
       console.log(retorno)
@@ -136,14 +136,14 @@ function Users({ modelosDB }: Props): JSX.Element {
       email: valores.email,
       fone: valores.fone.toString().replace(/\D/g, ""),
       senha: valores.senha,
-      dispositivos: valores.dispositivos
+      dispositivos: usuario?.dispositivos
     }
     console.log('Valores do formulário')
     console.log(novoUser)
 
     if (valores.id) {
       message.loading({ content: 'Um momento, por favor...', key });
-      await axios.put(`http://localhost:3002/usuarios/${valores.id}`, novoUser).then((retorno) => {
+      await axios.put(`http://localhost:3001/usuarios/${valores.id}`, novoUser).then((retorno) => {
         console.log(retorno)
         message.success({ content: 'Alterado com sucesso!', key, duration: 2 });
         cadastros.resetFields()
@@ -153,7 +153,7 @@ function Users({ modelosDB }: Props): JSX.Element {
       })
     } else {
       message.loading({ content: 'Um momento, por favor...', key });
-      await axios.post('http://localhost:3002/novoUsuario', novoUser).then((retorno) => {
+      await axios.post('http://localhost:3001/novoUsuario', novoUser).then((retorno) => {
         message.success({ content: 'Cadastrado com sucesso!', key, duration: 2 });
         cadastros.resetFields()
         console.log(retorno)
@@ -195,39 +195,38 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   ];
 
-  const addDispositivo=(valores)=>{
-    let usuarioNovo = usuario
-    const modelo={
-      _id: '',
-      nome: modelos,
-      prefSerie: '',
-      qtdItens: 0,
-      qtdSensores: 0,
-      customizado: valores.ativo,
-    }
-    const novoDispositivos={
-      _id: '',
-      idModelo: '',
-      nome:valores.nome,
-      modelo:modelo,
-      ativo:valores.ativo,
-      nrserie: '',
-      senha: ''
-    } 
-    let novoUsuario = {
+  const addDispositivo= async (valores)=>{
+    console.log('Valores:')
+    console.log(valores)
+    valores.itens = []
+    const novoDispositivo = await axios.post(`http://localhost:3001/novoDispositivo`,{valores}).then((retorno) => {
+      message.success({ content: 'Dispositivo cadastrado com sucesso!', key, duration: 2 });
+      console.log(retorno)
+      return retorno.data
+    }).catch((erro) => {
+      message.error('Falha ao deletar o usuário, tente novamente.');
+      console.log(erro)
+      return undefined
+    })
+
+    const dispositivosAtuais = usuario.dispositivos || []
+    if(novoDispositivo) dispositivosAtuais.push(novoDispositivo)
+    
+    const novoUsuario = {
       nome: usuario.nome,
       fone: usuario.fone,
       email: usuario.email,
-      dispositivos: [novoDispositivos],
+      dispositivos: dispositivosAtuais,
       senha: usuario.senha,
       id: usuario.id
     }
-    usuarioNovo.dispositivos.push(novoDispositivos)
+    // usuarioNovo.dispositivos.push(novoDispositivos)
     console.log('usuario')
     console.log(usuario)
     console.log('novoUsuario')
     console.log(novoUsuario)
-    setUsuario(usuarioNovo)
+
+    setUsuario(novoUsuario)
     
     
   }
