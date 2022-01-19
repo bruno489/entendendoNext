@@ -40,6 +40,9 @@ interface Props {
 }
 
 function Users({ modelosDB }: Props): JSX.Element {
+
+  console.log('modelosDB')
+  console.log(modelosDB)
   
   const { Search } = Input;
   const { Option } = Select;
@@ -99,7 +102,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   const achaUser = async () => {
     // await axios.get(`http://localhost:3002/usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`)
-    await api.get(`usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`)
+    await api.get(`http://localhost:3002/usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`)
     .then((retorno) => {
       const usuarioVindo = {
         id: retorno.data._id,
@@ -129,7 +132,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   const deletar = async () => {
     message.loading({ content: 'Um momento, por favor...', key });
-    await api.delete(`usuarios/${cadastros.getFieldValue("id")}`)
+    await api.delete(`http://localhost:3002/usuarios/${cadastros.getFieldValue("id")}`)
     .then((retorno) => {
       message.success({ content: 'Usuário deletado com sucesso!', key, duration: 2 });
       cadastros.resetFields()
@@ -155,7 +158,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
     if (valores.id) {
       message.loading({ content: 'Um momento, por favor...', key });
-      await api.put(`usuarios/${valores.id}`, novoUser).then((retorno) => {
+      await api.put(`http://localhost:3002/usuarios/${valores.id}`, novoUser).then((retorno) => {
         console.log(retorno)
         message.success({ content: 'Alterado com sucesso!', key, duration: 2 });
         cadastros.resetFields()
@@ -165,7 +168,7 @@ function Users({ modelosDB }: Props): JSX.Element {
       })
     } else {
       message.loading({ content: 'Um momento, por favor...', key });
-      await api.post('novoUsuario', novoUser).then((retorno) => {
+      await api.post('http://localhost:3002/novoUsuario', novoUser).then((retorno) => {
         message.success({ content: 'Cadastrado com sucesso!', key, duration: 2 });
         cadastros.resetFields()
         console.log(retorno)
@@ -229,6 +232,51 @@ function Users({ modelosDB }: Props): JSX.Element {
     
   }
 
+  //send
+  const sendEditDispositivo = async (valores)=>{
+    let novoModelo={
+      ativo:valores.ativo,
+      nome:valores.nome,
+      idModelo:valores.idModelo,
+      itens:[]
+    }
+    let novoDisp;
+    await api.put(`http://localhost:3002/dispositivos/${valores.idDispositivo}`,novoModelo).then(resultado=>{
+      console.log('retorno api')
+      novoDisp=resultado.data.novoDispositivo
+    }).catch(resultado=>{
+      console.log('retorno deu errado')
+      console.log(resultado)
+    })
+
+    console.log('novoDisp')
+    console.log(novoDisp)
+
+    const dispositivosAtuais = usuario.dispositivos.filter(dispositivo=>{
+      return dispositivo._id != valores.idDispositivo
+    }) || []
+
+    if(novoDisp) dispositivosAtuais.push(novoDisp)
+
+    const novoUsuario = {
+      nome: usuario.nome,
+      fone: usuario.fone,
+      email: usuario.email,
+      dispositivos: dispositivosAtuais,
+      senha: usuario.senha,
+      id: usuario.id
+    }
+
+    console.log('novoUsuario')
+    console.log(novoUsuario)
+
+    setUsuario(novoUsuario)
+    // console.log('novoModelo')
+    // console.log(novoModelo)
+    // console.log('valores')
+    // console.log(valores)
+  }
+
   const addDispositivo= async (valores)=>{
     valores.itens = []
 
@@ -236,7 +284,7 @@ function Users({ modelosDB }: Props): JSX.Element {
     console.log(usuario)
 
     // const novoDispositivo = await axios.post(`http://localhost:3001/novoDispositivo`,{valores}).then((retorno) => {
-    const novoDispositivo = await api.post(`novoDispositivo`,{valores}).then((retorno) => {
+    const novoDispositivo = await api.post(`http://localhost:3002/novoDispositivo`,{valores}).then((retorno) => {
       message.success({ content: 'Dispositivo cadastrado com sucesso!', key, duration: 2 });
       console.log(retorno)
       setModalAdd(false);
@@ -364,15 +412,25 @@ function Users({ modelosDB }: Props): JSX.Element {
               <Search placeholder="Procurar usuário" onSearch={handleOk} enterButton />
             </Form.Item>
           </Modal>
+          {/* edit */}
           <Modal title="Editar" visible={modalEdit} onOk={handleOkEdit} onCancel={handleCancelEdit}>
                 <FormDefault
                   name="formEditDispositivo"
                   initialValues={{ remember: false }}
                   autoComplete="off"
-                  onFinish={addDispositivo}
+                  onFinish={sendEditDispositivo}
                   labelCol={{ span: 4 }}
                   wrapperCol={{ span: 20 }}
                 >
+                  <FormItemDefault
+                    name='idDispositivo'
+                    rules={[{ required: true, message: 'Por favor, digite um E-mail.' }]}
+                    initialValue={dispositivo?._id}
+                    hidden
+                  >
+                    <Input/>
+
+                  </FormItemDefault>
                   <FormItemDefault
                     label="Nome"
                     name='nome'
@@ -386,7 +444,7 @@ function Users({ modelosDB }: Props): JSX.Element {
                     label="Modelo"
                     name="idModelo"
                     rules={[{ required: true, message: 'Por favor, digite um id.' }]}
-                    initialValue={{value:dispositivo?.modelo._id, key:dispositivo?.modelo.nome}}
+                    initialValue={{value:dispositivo?.modelo._id}}
                   >
                     <Select style={{ width: '100%' }}>
                       {modelosDB?.map((modelo) => {
@@ -401,10 +459,15 @@ function Users({ modelosDB }: Props): JSX.Element {
                     style={{ width: '150px', marginLeft: '5px' }}
                     labelCol={{ span: 15 }}
                     wrapperCol={{ span: 9 }}
-                    valuePropName="checked"
-                    initialValue={true}
+                    valuePropName={(dispositivo?.ativo)?"checked":"unchecked"}
+                    initialValue={dispositivo?.ativo}
                   >
-                    <Switch checkedChildren={<CheckOutlined />} unCheckedChildren={<CloseOutlined />} defaultChecked />
+                    <Switch checkedChildren={<CheckOutlined />} unCheckedChildren={<CloseOutlined />} />
+                  </FormItemDefault>
+                  <FormItemDefault >
+                    <Button type="primary" htmlType="submit">
+                      Salvar
+                    </Button>
                   </FormItemDefault>
                 </FormDefault>
           </Modal>

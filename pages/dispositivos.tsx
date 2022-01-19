@@ -181,7 +181,7 @@ function Users({ modelos }: Props): JSX.Element {
             rules={[{ required: true, message: 'Por favor, digite um id.' }]}
           >
             <Select defaultValue="Modelo" style={{ width: '100%' }}>
-              {modelos.map((modelo)=>{
+              {modelos?.map((modelo)=>{
                 return (<Option key={modelo._id} value={modelo._id}>{modelo.nome}</Option>)
               })}
             </Select>
