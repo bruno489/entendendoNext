@@ -3,8 +3,8 @@ import { GetServerSideProps } from "next"
 import { Form, Input, Button, Layout, message, Row, Switch, Popconfirm, Select } from 'antd'
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import axios from 'axios'
-import { FormDefault, ColDefault, FormItemDefault, TitleDefault } from '../styles/Form.styles'
-import { LoadSSRProps } from '../src/loadSsrProps'
+import { FormDefault, ColDefault, FormItemDefault, TitleDefault } from '../../styles/Form.styles'
+import { LoadSSRProps } from '../loadSsrProps'
 
 interface usuario {
   id: string;
@@ -102,7 +102,7 @@ function Users({ modelos }: Props): JSX.Element {
 
   const cancelar = () => { cadastros.resetFields(); setInfoCadastrado(undefined) }
 
-  async function setValues(valores:dispositivo) {
+  const setValues = async valores => {
     const novoDispositivo = {
       idDisp:valores.idDisp,
       nome: valores.nome,
@@ -161,7 +161,6 @@ function Users({ modelos }: Props): JSX.Element {
           onFinish={setValues}
           labelCol={{ span: 4 }}
           wrapperCol={{ span: 20 }}
-          
         >
           <FormItemDefault name='idDisp' hidden>
             <Input />

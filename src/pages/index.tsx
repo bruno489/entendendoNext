@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react"
 import { Form, Input, Button, Select, message, Row, Popconfirm, Modal, Tooltip, Space, Table, Switch } from 'antd'
 import MaskedInput from 'antd-mask-input'
 import { SearchOutlined, DeleteFilled, PlusSquareOutlined, CheckOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons'
-import { FormDefault, ColDefault, FormItemDefault, TitleDefault, GreenButton } from '../styles/Form.styles'
+import { FormDefault, ColDefault, FormItemDefault, TitleDefault, GreenButton } from '../../styles/Form.styles'
 import { GetServerSideProps } from "next"
-import { LoadSSRProps } from '../src/loadSsrProps'
-import api from '../src/backendApi'
+import { LoadSSRProps } from '../loadSsrProps'
+import api from '../backendApi'
 
 interface usuario {
   id: string;
@@ -88,14 +88,6 @@ function Users({ modelosDB }: Props): JSX.Element {
     setModalAdd(false);
   };
 
-  const handleOkEdit = () => {
-    setModalEdit(false);
-  };
-
-  const handleCancelEdit = () => {
-    setModalEdit(false);
-  };
-
   const showModalEdit = () => {
     setModalEdit(true);
   };
@@ -143,7 +135,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   const cancelar = () => { cadastros.resetFields() }
 
-  async function setValues(valores: usuario) {
+  const setValues = async valores => {
     const novoUser = {
       nome: valores.nome,
       id: valores.id,
@@ -233,47 +225,40 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   //send
   const sendEditDispositivo = async (valores)=>{
-    let novoModelo={
-      ativo:valores.ativo,
-      nome:valores.nome,
-      idModelo:valores.idModelo,
-      itens:[]
-    }
-    let novoDisp;
-    await api.put(`dispositivos/${valores.idDispositivo}`,novoModelo).then(resultado=>{
-      console.log('retorno api')
-      novoDisp=resultado.data.novoDispositivo
+    console.log('valores')
+    console.log(valores)
+
+    const novoModelo = await api.get(`modelosid/${valores.idModelo}`).then(resultado=>{
+      return resultado.data
     }).catch(resultado=>{
       console.log('retorno deu errado')
       console.log(resultado)
     })
 
-    console.log('novoDisp')
-    console.log(novoDisp)
+    const dispositivoEscolhido = usuario.dispositivos.find(dispositivo=>{
+      return dispositivo._id == valores.idDispositivo
+    })
 
-    const dispositivosAtuais = usuario.dispositivos.filter(dispositivo=>{
-      return dispositivo._id != valores.idDispositivo
-    }) || []
+    console.log('dispositivoEscolhido')
+    console.log(dispositivoEscolhido)
 
-    if(novoDisp) dispositivosAtuais.push(novoDisp)
-
-    const novoUsuario = {
-      nome: usuario.nome,
-      fone: usuario.fone,
-      email: usuario.email,
-      dispositivos: dispositivosAtuais,
-      senha: usuario.senha,
-      id: usuario.id
+    const novoDispositivo={
+      ativo:valores.ativo,
+      _id:valores.idDispositivo,
+      idModelo:dispositivoEscolhido.modelo._id,
+      nome:valores.nome,
+      modelo:novoModelo,
+      nrserie:dispositivoEscolhido.nrserie,
+      senha:dispositivoEscolhido.senha
     }
 
-    console.log('novoUsuario')
-    console.log(novoUsuario)
+    
+    let index=usuario.dispositivos.findIndex(dispositivo=>{
+      return dispositivo._id != valores.idDispositivo
+    })
 
-    setUsuario(novoUsuario)
-    // console.log('novoModelo')
-    // console.log(novoModelo)
-    // console.log('valores')
-    // console.log(valores)
+    if(novoDispositivo) usuario.dispositivos.splice(index , 1, novoDispositivo)
+    setModalEdit(false)
   }
 
   const addDispositivo= async (valores)=>{
@@ -318,7 +303,7 @@ function Users({ modelosDB }: Props): JSX.Element {
   async function onDeleteDispositivo(record) {
 
     let novoDispositivos = usuario.dispositivos.filter(dispo => {
-      return dispo.idModelo != record.idModelo
+      return dispo._id != record._id
     })
 
     let novoUsuario = {
@@ -412,7 +397,19 @@ function Users({ modelosDB }: Props): JSX.Element {
             </Form.Item>
           </Modal>
           {/* edit */}
-          <Modal title="Editar" visible={modalEdit} onOk={handleOkEdit} onCancel={handleCancelEdit}>
+          <Modal title="Editar" 
+            visible={modalEdit} 
+            closable={false}
+            
+            footer={[
+              <Button key="back" onClick={()=>setModalEdit(false)}>
+                Cancelar
+              </Button>,
+              <Button key="submit" form="formEditDispositivo" type="primary" htmlType="submit">
+                Enviar
+              </Button>
+            ]}
+            >
                 <FormDefault
                   name="formEditDispositivo"
                   initialValues={{ remember: false }}
@@ -462,11 +459,6 @@ function Users({ modelosDB }: Props): JSX.Element {
                     initialValue={dispositivo?.ativo}
                   >
                     <Switch checkedChildren={<CheckOutlined />} unCheckedChildren={<CloseOutlined />} />
-                  </FormItemDefault>
-                  <FormItemDefault >
-                    <Button type="primary" htmlType="submit">
-                      Salvar
-                    </Button>
                   </FormItemDefault>
                 </FormDefault>
           </Modal>

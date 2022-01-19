@@ -1,6 +1,6 @@
 import 'antd/dist/antd.css';
 import {Layout} from 'antd'
-import MenuExport from '../src/componentes/menu';
+import MenuExport from '../componentes/menu';
 
 
 function MyApp({ Component, pageProps }) {

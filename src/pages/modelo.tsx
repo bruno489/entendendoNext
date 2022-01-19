@@ -1,6 +1,6 @@
 import React, {useState,useEffect} from 'react'
 import {Form, Input, InputNumber, Row, Switch, Button, Popconfirm, Space, Typography, message } from 'antd'
-import {FormDefault,ColDefault,FormItemDefault,TitleDefault} from '../styles/Form.styles'
+import {FormDefault,ColDefault,FormItemDefault,TitleDefault} from '../../styles/Form.styles'
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import axios from 'axios'
 
