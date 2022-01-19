@@ -102,7 +102,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   const achaUser = async () => {
     // await axios.get(`http://localhost:3002/usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`)
-    await api.get(`http://localhost:3002/usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`)
+    await api.get(`usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`)
     .then((retorno) => {
       const usuarioVindo = {
         id: retorno.data._id,
@@ -132,7 +132,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   const deletar = async () => {
     message.loading({ content: 'Um momento, por favor...', key });
-    await api.delete(`http://localhost:3002/usuarios/${cadastros.getFieldValue("id")}`)
+    await api.delete(`usuarios/${cadastros.getFieldValue("id")}`)
     .then((retorno) => {
       message.success({ content: 'Usuário deletado com sucesso!', key, duration: 2 });
       cadastros.resetFields()
@@ -158,7 +158,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
     if (valores.id) {
       message.loading({ content: 'Um momento, por favor...', key });
-      await api.put(`http://localhost:3002/usuarios/${valores.id}`, novoUser).then((retorno) => {
+      await api.put(`usuarios/${valores.id}`, novoUser).then((retorno) => {
         console.log(retorno)
         message.success({ content: 'Alterado com sucesso!', key, duration: 2 });
         cadastros.resetFields()
@@ -168,7 +168,7 @@ function Users({ modelosDB }: Props): JSX.Element {
       })
     } else {
       message.loading({ content: 'Um momento, por favor...', key });
-      await api.post('http://localhost:3002/novoUsuario', novoUser).then((retorno) => {
+      await api.post('novoUsuario', novoUser).then((retorno) => {
         message.success({ content: 'Cadastrado com sucesso!', key, duration: 2 });
         cadastros.resetFields()
         console.log(retorno)
@@ -241,7 +241,7 @@ function Users({ modelosDB }: Props): JSX.Element {
       itens:[]
     }
     let novoDisp;
-    await api.put(`http://localhost:3002/dispositivos/${valores.idDispositivo}`,novoModelo).then(resultado=>{
+    await api.put(`dispositivos/${valores.idDispositivo}`,novoModelo).then(resultado=>{
       console.log('retorno api')
       novoDisp=resultado.data.novoDispositivo
     }).catch(resultado=>{
@@ -284,7 +284,7 @@ function Users({ modelosDB }: Props): JSX.Element {
     console.log(usuario)
 
     // const novoDispositivo = await axios.post(`http://localhost:3001/novoDispositivo`,{valores}).then((retorno) => {
-    const novoDispositivo = await api.post(`http://localhost:3002/novoDispositivo`,{valores}).then((retorno) => {
+    const novoDispositivo = await api.post(`novoDispositivo`,{valores}).then((retorno) => {
       message.success({ content: 'Dispositivo cadastrado com sucesso!', key, duration: 2 });
       console.log(retorno)
       setModalAdd(false);
