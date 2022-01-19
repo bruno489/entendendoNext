@@ -101,7 +101,6 @@ function Users({ modelosDB }: Props): JSX.Element {
   };
 
   const achaUser = async () => {
-    // await axios.get(`http://localhost:3002/usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`)
     await api.get(`usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`)
     .then((retorno) => {
       const usuarioVindo = {
