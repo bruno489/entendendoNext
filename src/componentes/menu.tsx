@@ -4,11 +4,9 @@ import SubMenu from 'antd/lib/menu/SubMenu'
 import {useRouter} from 'next/router';
 
 import {
-  AppstoreOutlined,
   TeamOutlined,
   DesktopOutlined,
-  ContainerOutlined,
-  MailOutlined,
+  ApartmentOutlined
 } from '@ant-design/icons';
 
 
@@ -29,10 +27,10 @@ function MenuExport() {
     <Menu.Item key="1" icon={<TeamOutlined />} onClick={ChamaIndex}>
       Usuários
     </Menu.Item>
-    <Menu.Item key="2" icon={<TeamOutlined />} onClick={ChamaDisp}>
+    <Menu.Item key="2" icon={<DesktopOutlined />} onClick={ChamaDisp}>
       Dispositivos
     </Menu.Item>
-    <Menu.Item key="3" icon={<TeamOutlined />} onClick={ChamaMod}>
+    <Menu.Item key="3" icon={<ApartmentOutlined />} onClick={ChamaMod}>
       Modelos
     </Menu.Item>
    

@@ -7,11 +7,8 @@ export const FormDefault = styled(Form)`
   padding:0 auto ;
 `
 export const ColDefault = styled(Col)`
-  background-color: #ccc;
-  width: 600px;
+  width: 800px;
   margin: 10px Auto;
-  border:1px solid #000;
-  border-radius: 15px;
   align-items: center;
   justify-content: center;
   text-align: center;
@@ -27,13 +24,11 @@ export const FormItemDefault = styled(Form.Item)`
 `
 
 export const TitleDefault = styled(Title)`
-  text-decoration: underline;
+  
 `
 
 export const GreenButton = styled(Button)`
-
-  &:hover{
-    background-color: blue;
-  }
+  width: 100%;
+  
 `
 

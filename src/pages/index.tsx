@@ -1,61 +1,34 @@
 import React, { useEffect, useState } from "react"
-import { Form, Input, Button, Select, message, Row, Popconfirm, Modal, Tooltip, Space, Table, Switch } from 'antd'
+import { Form, Input, Button, message, Row, Col, Popconfirm, Tag, Space, Table, Layout } from 'antd'
 import MaskedInput from 'antd-mask-input'
-import { SearchOutlined, DeleteFilled, PlusSquareOutlined, CheckOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons'
-import { FormDefault, ColDefault, FormItemDefault, TitleDefault, GreenButton } from '../../styles/Form.styles'
+import { SearchOutlined, DeleteFilled, PlusSquareOutlined, EditOutlined } from '@ant-design/icons'
+import { FormDefault, FormItemDefault, TitleDefault, GreenButton } from '../../styles/Form.styles'
 import { GetServerSideProps } from "next"
 import { LoadSSRProps } from '../loadSsrProps'
 import api from '../backendApi'
-
-interface usuario {
-  id: string;
-  nome: string;
-  email: string;
-  fone: string;
-  senha: string;
-  dispositivos: Array<infosDisp>
-}
-
-interface infosMod {
-  _id: string;
-  nome: string;
-  prefSerie: string;
-  qtdItens: number;
-  qtdSensores: number;
-  customizado: boolean;
-}
-
-interface infosDisp {
-  _id: string;
-  idModelo: string;
-  nome: string;
-  modelo: infosMod;
-  nrserie: string;
-  senha: string;
-  ativo: boolean;
-}
+import ModalEditar from '../componentes/modais/modalEditar'
+import ModalAdicionar from '../componentes/modais/modalAdicionar'
+import ModalPesquisaUsuario from '../componentes/modais/modalPesquisaUsuario'
+import { Usuario } from '../componentes/interfaces/usuario'
+import { InfosDisp } from '../componentes/interfaces/infosDisp'
+import { Itens } from '../componentes/interfaces/itens'
 
 interface Props {
-  modelosDB: Array<infosDisp>
+  modelosDB: Array<InfosDisp>
 }
 
 function Users({ modelosDB }: Props): JSX.Element {
-
-  console.log('modelosDB')
-  console.log(modelosDB)
-  
+  const { Header, Sider, Content } = Layout;
   const { Search } = Input;
-  const { Option } = Select;
   const [cadastros] = Form.useForm()
 
-  const [usuario, setUsuario] = useState<usuario>()
+  const [usuario, setUsuario] = useState<Usuario>()
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [ModalAdd, setModalAdd] = useState(false);
-  const [modelo,setModelos]=useState()
-  const [dispositivo, setDispositivo ] = useState<infosDisp>(undefined)
+  const [dispositivo, setDispositivo] = useState<InfosDisp>(undefined)
+  const [tabItens, setTabItens] = useState([])
   const [modalEdit, setModalEdit] = useState(false);
 
-  let key = 'updatable'
 
   const layout = {
     labelCol: { span: 4 },
@@ -91,25 +64,32 @@ function Users({ modelosDB }: Props): JSX.Element {
   const showModalEdit = () => {
     setModalEdit(true);
   };
+  const closeModalEdit = () => {
+    setModalEdit(false);
+  };
 
   const achaUser = async () => {
+    const key = 'user'
+    message.loading({ content: 'Um momento, por favor...', key });
     await api.get(`usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`)
-    .then((retorno) => {
-      const usuarioVindo = {
-        id: retorno.data._id,
-        nome: retorno.data.nome,
-        email: retorno.data.email,
-        fone: retorno.data.fone.toString(),
-        senha: '',
-        dispositivos: retorno.data.dispositivos
-      }
-      setUsuario(usuarioVindo)
-      if (!retorno.data) message.error('Usuário não encontrado');
-      
-    }).catch((erro) => {
+      .then((retorno) => {
+        message.success({ content: 'Usuário encontrado!', key });
+        const usuarioVindo = {
+          id: retorno.data._id,
+          nome: retorno.data.nome,
+          email: retorno.data.email,
+          fone: retorno.data.fone.toString(),
+          senha: '',
+          dispositivos: retorno.data.dispositivos
+        }
+        setUsuario(usuarioVindo)
 
-      console.log(erro)
-    })
+        if (!retorno.data) message.error('Usuário não encontrado');
+
+      }).catch((erro) => {
+        message.error('Erro ao encontrar usuário.')
+        console.log(erro)
+      })
 
   }
 
@@ -119,21 +99,22 @@ function Users({ modelosDB }: Props): JSX.Element {
     cadastros.setFieldsValue(usuario)
 
     console.log('tá chegando do useEffect')
-  }, [usuario,cadastros])
+  }, [usuario, cadastros])
 
   const deletar = async () => {
+    let key = 'deletar'
     message.loading({ content: 'Um momento, por favor...', key });
     await api.delete(`usuarios/${cadastros.getFieldValue("id")}`)
-    .then((retorno) => {
-      message.success({ content: 'Usuário deletado com sucesso!', key, duration: 2 });
-      cadastros.resetFields()
-    }).catch((erro) => {
-      message.error('Falha ao deletar o usuário, tente novamente.');
-      console.log(erro)
-    })
+      .then((retorno) => {
+        message.success({ content: 'Usuário deletado com sucesso!', key, duration: 2 });
+        cadastros.resetFields()
+      }).catch((erro) => {
+        message.error('Falha ao deletar o usuário, tente novamente.');
+        console.log(erro)
+      })
   }
 
-  const cancelar = () => { cadastros.resetFields() }
+  const cancelar = () => { cadastros.resetFields();setUsuario(undefined) }
 
   const setValues = async valores => {
     const novoUser = {
@@ -146,13 +127,15 @@ function Users({ modelosDB }: Props): JSX.Element {
     }
     console.log('Valores do formulário')
     console.log(novoUser)
-
+    const key = 'alterar'
     if (valores.id) {
+
       message.loading({ content: 'Um momento, por favor...', key });
       await api.put(`usuarios/${valores.id}`, novoUser).then((retorno) => {
         console.log(retorno)
         message.success({ content: 'Alterado com sucesso!', key, duration: 2 });
         cadastros.resetFields()
+        setUsuario(undefined)
       }).catch((erro) => {
         message.error('Falha ao editar usuário, tente novamente.');
         console.log(erro)
@@ -162,6 +145,7 @@ function Users({ modelosDB }: Props): JSX.Element {
       await api.post('novoUsuario', novoUser).then((retorno) => {
         message.success({ content: 'Cadastrado com sucesso!', key, duration: 2 });
         cadastros.resetFields()
+        setUsuario(undefined)
         console.log(retorno)
       }).catch((erro) => {
         message.error('Falha ao cadastrar usuário, tente novamente.');
@@ -181,94 +165,111 @@ function Users({ modelosDB }: Props): JSX.Element {
     {
       title: 'Modelo',
       dataIndex: ['modelo', 'nome'],
-      key:'modelo.nome'
     },
     {
       title: 'Itens',
-      dataIndex: 'Itens',
-    },
-    {
-      title: 'Excluir',
-      dataIndex: 'excluir',
-      render: (nome, record) => (
-        <Button onClick={() => {
-          onDeleteDispositivo(record)
-        }} style={{ color: "red" }}>
-          <DeleteFilled />
-        </Button>
+      dataIndex: 'itens',
+      render: (itens) => (
+        <>
+          {itens.map((item) => {
+            return <Tag color='geekblue'>{item.nome}</Tag>
+          })}
+        </>
+
       )
     },
     {
-      title: 'Editar',
-      dataIndex: 'editar',
+      title: 'Ativo',
+      dataIndex: 'ativo',
+      render: (ativo: boolean) => (
+        <Tag color={ativo ? 'green' : 'volcano'}>
+          {ativo ? 'Sim' : 'Não'}
+        </Tag >
+      )
+    },
+    {
+      title: 'Editar/Deletar',
+      dataIndex: 'Acao',
       render: (nome, record) => (
-        <Button onClick={() => {
-          onEditDispositivo(record)
-        }} style={{ color: "yellow" }}>
-          <EditOutlined />
-        </Button>
+        <Space>
+          <Button onClick={() => {
+            onEditDispositivo(record)
+          }} style={{ color: "yellow" }}>
+            <EditOutlined />
+          </Button>
+          <Popconfirm
+            title="Tem certeza que deseja excluir este dispositivo?"
+            onConfirm={()=>onDeleteDispositivo(record)}
+            okText="Sim"
+            cancelText="Não"
+          >
+            <Button style={{ color: "red" }}>
+              <DeleteFilled />
+            </Button>
+          </Popconfirm>
+
+        </Space>
       )
     },
 
   ];
 
 
-  const onEditDispositivo=(record)=>{
+  const onEditDispositivo = (record) => {
     console.log('usuario antes add')
     console.log(usuario)
     console.log('record interno')
     console.log(record)
     setDispositivo(record)
     showModalEdit()
-    
+
   }
 
   //send
-  const sendEditDispositivo = async (valores)=>{
+  const sendEditDispositivo = async (valores) => {
     console.log('valores')
     console.log(valores)
 
-    const novoModelo = await api.get(`modelosid/${valores.idModelo}`).then(resultado=>{
+    const novoModelo = await api.get(`modelosid/${valores.idModelo}`).then(resultado => {
       return resultado.data
-    }).catch(resultado=>{
+    }).catch(resultado => {
       console.log('retorno deu errado')
       console.log(resultado)
     })
 
-    const dispositivoEscolhido = usuario.dispositivos.find(dispositivo=>{
+    const dispositivoEscolhido = usuario.dispositivos.find(dispositivo => {
       return dispositivo._id == valores.idDispositivo
     })
 
     console.log('dispositivoEscolhido')
     console.log(dispositivoEscolhido)
 
-    const novoDispositivo={
-      ativo:valores.ativo,
-      _id:valores.idDispositivo,
-      idModelo:dispositivoEscolhido.modelo._id,
-      nome:valores.nome,
-      modelo:novoModelo,
-      nrserie:dispositivoEscolhido.nrserie,
-      senha:dispositivoEscolhido.senha
+    const novoDispositivo = {
+      ativo: valores.ativo,
+      _id: valores.idDispositivo,
+      idModelo: dispositivoEscolhido.modelo._id,
+      itens: tabItens,
+      nome: valores.nome,
+      modelo: novoModelo,
+      nrserie: dispositivoEscolhido.nrserie,
+      senha: dispositivoEscolhido.senha
     }
 
-    
-    let index=usuario.dispositivos.findIndex(dispositivo=>{
+
+    let index = usuario.dispositivos.findIndex(dispositivo => {
       return dispositivo._id != valores.idDispositivo
     })
 
-    if(novoDispositivo) usuario.dispositivos.splice(index , 1, novoDispositivo)
+    if (novoDispositivo) usuario.dispositivos.splice(index, 1, novoDispositivo)
     setModalEdit(false)
   }
 
-  const addDispositivo= async (valores)=>{
+  const addDispositivo = async (valores) => {
     valores.itens = []
-
-    console.log('usuario')
-    console.log(usuario)
-
+    const key = 'addDisp'
+    message.loading({ content: 'Um momento, por favor...', key })
     // const novoDispositivo = await axios.post(`http://localhost:3001/novoDispositivo`,{valores}).then((retorno) => {
-    const novoDispositivo = await api.post(`novoDispositivo`,{valores}).then((retorno) => {
+    const novoDispositivo = await api.post(`novoDispositivo`, { valores }).then((retorno) => {
       message.success({ content: 'Dispositivo cadastrado com sucesso!', key, duration: 2 });
       console.log(retorno)
       setModalAdd(false);
@@ -280,7 +281,7 @@ function Users({ modelosDB }: Props): JSX.Element {
     })
 
     const dispositivosAtuais = usuario.dispositivos || []
-    if(novoDispositivo) dispositivosAtuais.push(novoDispositivo)
+    if (novoDispositivo) dispositivosAtuais.push(novoDispositivo)
 
     const novoUsuario = {
       nome: usuario.nome,
@@ -321,7 +322,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   let selecionados
   const rowSelection = {
-    onChange: (selectedRowKeys: React.Key[], selectedRows: infosDisp[]) => {
+    onChange: (selectedRowKeys: React.Key[], selectedRows: InfosDisp[]) => {
       selecionados = selectedRows
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
 
@@ -329,241 +330,148 @@ function Users({ modelosDB }: Props): JSX.Element {
   };
 
   console.log(selecionados)
-  return (
+  return (<Layout>
 
-    <Row >
-      <TitleDefault>Cadastro de usuários</TitleDefault>
-      <FormDefault
-        name="basic"
-        initialValues={{ remember: false }}
-        autoComplete="off"
-        form={cadastros}
-        onFinish={setValues}
-        {...layout}
-      >
 
-        <ColDefault style={{ paddingTop: '40px', paddingBottom: '40px' }}>
+    <Content style={{ marginTop: '20px' }}>
 
-          <Form.Item name="id" hidden>
-            <Input />
-          </Form.Item>
+      <Layout>
+        <TitleDefault style={{ textAlign: 'center' }} >Cadastro de usuários</TitleDefault>
+        <FormDefault
+          name="basic"
+          initialValues={{ remember: false }}
+          autoComplete="off"
+          form={cadastros}
+          onFinish={setValues}
+          {...layout}
+        >
+          <Row>
 
-          <FormItemDefault
-            label="Nome"
-            rules={[{ required: true, message: 'Por favor, digite um E-mail.' }]}
-          >
-            <Space>
-              <Form.Item name="nome" style={{ width: '350px', margin: 0 }} >
-                <Input placeholder="Nome" />
-              </Form.Item>
-              <Tooltip title="Useful information">
-                <SearchOutlined onClick={showModal} />
-              </Tooltip>
-            </Space>
-          </FormItemDefault>
+            <Col span={11}>
 
-          <FormItemDefault
-            label="E-mail"
-            name="email"
-            rules={[{ required: true, message: 'Por favor, digite um E-mail.' }]}
-          >
-            <Input placeholder="usuário@gmail.com" />
-          </FormItemDefault>
 
-          <FormItemDefault
-            label="Telefone"
-            name="fone"
-            rules={[{ required: true, message: 'Por favor, insira seu telefone.' }]}
+              <Col style={{ paddingTop: '40px', paddingBottom: '40px' }}>
 
-          >
-            <MaskedInput mask="(11) 1 1111-1111" style={{ width: '100%' }} placeholder="(99) 99999-9999" min={0} max={9999999999} />
-          </FormItemDefault>
+                <Form.Item name="id" hidden>
+                  <Input />
+                </Form.Item>
 
-          <FormItemDefault
-            label="Senha"
-            name="senha"
-            rules={[{ required: true, message: 'Por favor, digite sua senha.' }]}
-          >
-            <Input.Password />
-          </FormItemDefault>
-
-          <Modal title="Basic Modal" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
-            <Form.Item
-              label="Usuário"
-              name="pesquisa"
-              rules={[{ required: true, message: 'Por favor, digite um usuário.' }]}
-            >
-              <Search placeholder="Procurar usuário" onSearch={handleOk} enterButton />
-            </Form.Item>
-          </Modal>
-          {/* edit */}
-          <Modal title="Editar" 
-            visible={modalEdit} 
-            closable={false}
-            
-            footer={[
-              <Button key="back" onClick={()=>setModalEdit(false)}>
-                Cancelar
-              </Button>,
-              <Button key="submit" form="formEditDispositivo" type="primary" htmlType="submit">
-                Enviar
-              </Button>
-            ]}
-            >
-                <FormDefault
-                  name="formEditDispositivo"
-                  initialValues={{ remember: false }}
-                  autoComplete="off"
-                  onFinish={sendEditDispositivo}
-                  labelCol={{ span: 4 }}
-                  wrapperCol={{ span: 20 }}
+                <FormItemDefault
+                  name="nome"
+                  label="Nome"
+                  rules={[{ required: true, message: 'Por favor, digite um E-mail.' }]}
                 >
-                  <FormItemDefault
-                    name='idDispositivo'
-                    rules={[{ required: true, message: 'Por favor, digite um E-mail.' }]}
-                    initialValue={dispositivo?._id}
-                    hidden
-                  >
-                    <Input/>
+                  <Search placeholder="Nome" onSearch={showModal} enterButton />
 
-                  </FormItemDefault>
-                  <FormItemDefault
-                    label="Nome"
-                    name='nome'
-                    rules={[{ required: true, message: 'Por favor, digite um E-mail.' }]}
-                    initialValue={dispositivo?.nome}
-                  >
-                    <Input placeholder="Nome"/>
+                </FormItemDefault>
 
-                  </FormItemDefault>
-                  <FormItemDefault
-                    label="Modelo"
-                    name="idModelo"
-                    rules={[{ required: true, message: 'Por favor, digite um id.' }]}
-                    initialValue={{value:dispositivo?.modelo._id}}
-                  >
-                    <Select style={{ width: '100%' }}>
-                      {modelosDB?.map((modelo) => {
-                        return (<Option key={modelo._id} value={modelo._id}>{modelo.nome}</Option>)
-                      })
-                      }
-                    </Select>
-                  </FormItemDefault>
-                  <FormItemDefault
-                    name='ativo'
-                    label='Ativo'
-                    style={{ width: '150px', marginLeft: '5px' }}
-                    labelCol={{ span: 15 }}
-                    wrapperCol={{ span: 9 }}
-                    valuePropName={(dispositivo?.ativo)?"checked":"unchecked"}
-                    initialValue={dispositivo?.ativo}
-                  >
-                    <Switch checkedChildren={<CheckOutlined />} unCheckedChildren={<CloseOutlined />} />
-                  </FormItemDefault>
-                </FormDefault>
-          </Modal>
-          <Modal title="Adicionar" visible={ModalAdd} onOk={handleOkAdd} onCancel={handleCancelAdd}>
-            <Row >
-
-              <ColDefault style={{ paddingTop: '40px', paddingBottom: '40px' }}>
-                <FormDefault
-                  name="basic"
-                  initialValues={{ remember: false }}
-                  autoComplete="off"
-                  onFinish={addDispositivo}
-                  labelCol={{ span: 4 }}
-                  wrapperCol={{ span: 20 }}
+                <FormItemDefault
+                  label="E-mail"
+                  name="email"
+                  rules={[
+                    { required: true, message: 'Por favor, digite um E-mail.' },
+                    {type:'email',message:'Formato de e-mail inválido.'}
+                  ]}
                 >
-                  <FormItemDefault
-                    label="Nome"
-                    name='nome'
-                    rules={[{ required: true, message: 'Por favor, digite um E-mail.' }]}
-                  >
-                    <Input placeholder="Nome"/>
+                  <Input placeholder="usuário@gmail.com" />
+                </FormItemDefault>
 
-                  </FormItemDefault>
-                  <FormItemDefault
-                    label="Modelo"
-                    name="idModelo"
-                    rules={[{ required: true, message: 'Por favor, digite um id.' }]}
-                    initialValue="Modelo"
-                  >
-                    <Select style={{ width: '100%' }}>
-                      {modelosDB?.map((modelo) => {
-                        return (<Option key={modelo._id} value={modelo._id}>{modelo.nome}</Option>)
-                      })
-                      }
-                    </Select>
-                  </FormItemDefault>
+                <FormItemDefault
+                  label="Telefone"
+                  name="fone"
+                  rules={[{ required: true, message: 'Por favor, insira seu telefone.' }]}
 
-                  <FormItemDefault
-                    name='ativo'
-                    label='Ativo'
-                    style={{ width: '150px', marginLeft: '5px' }}
-                    labelCol={{ span: 15 }}
-                    wrapperCol={{ span: 9 }}
-                    valuePropName="checked"
-                    initialValue={true}
-                  >
-                    <Switch checkedChildren={<CheckOutlined />} unCheckedChildren={<CloseOutlined />} defaultChecked />
-                  </FormItemDefault>
+                >
+                  <MaskedInput mask="(11) 1 1111-1111" style={{ width: '100%' }} placeholder="(99) 99999-9999" min={0} max={9999999999} />
+                </FormItemDefault>
 
-                  <FormItemDefault >
-                    <Button type="primary" htmlType="submit">
-                      Salvar
-                    </Button>
-                  </FormItemDefault>
+                <FormItemDefault
+                  label="Senha"
+                  name="senha"
+                  rules={[{ required: true, message: 'Por favor, digite sua senha.' }]}
+                >
+                  <Input.Password />
+                </FormItemDefault>
 
-                </FormDefault>
-              </ColDefault>
-            </Row>
-          </Modal>
+                <ModalPesquisaUsuario
+                  isModalVisible={isModalVisible}
+                  handleOk={handleOk}
+                  handleCancel={handleCancel}
 
-        </ColDefault>
-        <GreenButton onClick={showModalAdd}> <PlusSquareOutlined /> </GreenButton>
-        <ColDefault>
+                />
 
-          <Table
-            rowSelection={{
-              type: 'checkbox',
-              ...rowSelection,
-            }}
-            columns={columns}
-            dataSource={usuario ? [...usuario?.dispositivos] : []}
-          />
+                <ModalEditar
+                  modalEdit={modalEdit}
+                  closeModalEdit={closeModalEdit}
+                  sendEditDispositivo={sendEditDispositivo}
+                  dispositivo={dispositivo}
+                  modelosDB={modelosDB}
+                  usuario={usuario}
+                  setUsuario={setUsuario}
+                  setTabItens={setTabItens}
+                  tabItens={tabItens}
+                />
 
-        </ColDefault>
+                <ModalAdicionar
+                  ModalAdd={ModalAdd}
+                  handleOkAdd={handleOkAdd}
+                  handleCancelAdd={handleCancelAdd}
+                  addDispositivo={addDispositivo}
+                  modelosDB={modelosDB}
+                />
 
-        <FormItemDefault >
-          <Button type="primary" htmlType="submit">
-            Salvar
-          </Button>
+              </Col>
 
-          <Popconfirm placement="bottom"
-            title={'Tem certeza que dejesa excluir?'}
-            onConfirm={deletar}
-            okText="Sim"
-            cancelText="Não">
-            <Button>Excluir</Button>
-          </Popconfirm>
+            </Col>
 
-          <Button onClick={cancelar}>
-            Cancelar
-          </Button>
-          <Button onClick={() => {
-            console.log("=-=-=-=-=-=-=-=-=-=-=-")
-            console.log("usuario:")
-            console.log(usuario)
-            console.log("=-=-=-=-=-=-=-=-=-=-=-")
-          }}>
-            Mostrar Usuário
-          </Button>
+            <Col span={12}>
+              <GreenButton type="primary" onClick={showModalAdd}> Adicionar Dispositivo </GreenButton>
+              <Table
+                rowSelection={{
+                  type: 'checkbox',
+                  ...rowSelection,
+                }}
+                columns={columns}
+                dataSource={usuario ? [...usuario?.dispositivos] : []}
+              />
+            </Col>
+            <FormItemDefault >
+              <Space>
+                <Button type="primary" htmlType="submit">
+                  Salvar
+                </Button>
 
-        </FormItemDefault>
+                <Popconfirm placement="bottom"
+                  title={'Tem certeza que dejesa excluir?'}
+                  onConfirm={deletar}
+                  okText="Sim"
+                  cancelText="Não">
+                  <Button>Excluir</Button>
+                </Popconfirm>
 
-      </FormDefault>
+                <Button onClick={cancelar}>
+                  Cancelar
+                </Button>
+                <Button onClick={() => {
+                  console.log("=-=-=-=-=-=-=-=-=-=-=-")
+                  console.log("usuario:")
+                  console.log(usuario)
+                  console.log("=-=-=-=-=-=-=-=-=-=-=-")
+                }}>
+                  Mostrar Usuário
+                </Button>
+              </Space>
+            </FormItemDefault>
+          </Row>
 
-    </Row >
+        </FormDefault>
+      </Layout>
+
+    </Content>
+
+  </Layout>
+
+
   )
 }
 

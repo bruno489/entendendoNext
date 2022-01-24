@@ -2,35 +2,28 @@ import React, {useState,useEffect} from 'react'
 import {Form, Input, InputNumber, Row, Switch, Button, Popconfirm, Space, Typography, message } from 'antd'
 import {FormDefault,ColDefault,FormItemDefault,TitleDefault} from '../../styles/Form.styles'
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
-import axios from 'axios'
-
-interface infosDisp{
-  _id:string;
-  nome:string;
-  prefSerie:string;
-  qtdItens:number;
-  qtdSensores:number;
-  customizado:boolean;
-}
+import { InfosMod } from '../componentes/interfaces/infosMod';
+import api from '../backendApi';
 
 export default function Modelo(){
 
   const [cadModelos]=Form.useForm()
 
-  const [modelo,setModelo] = useState<infosDisp>()
+  const [modelo,setModelo] = useState<InfosMod>()
 
   const { Title } = Typography;
   const { Search } = Input;
 
-  let key= 'updatable'
+  
 
   const cancelar =()=>{cadModelos.resetFields()}
 
-  async function send(infosModelo:infosDisp){
+  const send = async (infosModelo) => {
     console.log(infosModelo)
+    const key= 'send'
     message.loading({ content: 'Um momento, por favor...', key });
     if(cadModelos.getFieldValue('_id')!=undefined){
-      await axios.put(`http://localhost:3001/modelos/${cadModelos.getFieldValue('_id')}`,infosModelo).then((retorno)=>{
+      await api.put(`modelos/${cadModelos.getFieldValue('_id')}`,infosModelo).then((retorno)=>{
         console.log(retorno)
         cadModelos.resetFields()
         message.success({ content: 'Editado com sucesso!', key });
@@ -39,7 +32,7 @@ export default function Modelo(){
         console.log(retorno)
       })
     }else{
-      await axios.post('http://localhost:3001/novoModelo',infosModelo).then((retorno)=>{
+      await api.post('novoModelo',infosModelo).then((retorno)=>{
         console.log(retorno)
         cadModelos.resetFields()
         message.success({ content: 'Cadastrado com sucesso!', key });
@@ -52,8 +45,9 @@ export default function Modelo(){
   }
 
   async function onSearch(){
+    const key='pesquisa'
     message.loading({ content: 'Um momento, por favor...', key });
-    await axios.get(`http://localhost:3001/modelos/${cadModelos.getFieldValue('nome')}`).then((retorno)=>{
+    await api.get(`modelos/${cadModelos.getFieldValue('nome')}`).then((retorno)=>{
       setModelo(retorno.data)
       message.success({ content: 'Encontrado com sucesso!', key });
     }).catch((retorno)=>{
@@ -63,9 +57,10 @@ export default function Modelo(){
   }
 
   async function deletar() {
+    const key='delete'
     console.log(cadModelos.getFieldValue('_id'))
     message.loading({ content: 'Um momento, por favor...', key });
-    await axios.delete(`http://localhost:3001/modelos/${cadModelos.getFieldValue('_id')}`).then(()=>{
+    await api.delete(`modelos/${cadModelos.getFieldValue('_id')}`).then(()=>{
       message.success({ content: 'Deletado com sucesso.', key });
       cadModelos.resetFields()
     }).catch((retorno)=>{
@@ -88,8 +83,8 @@ export default function Modelo(){
       autoComplete="off"
       form={cadModelos}
       onFinish={send}
-      labelCol={{ span: 6 }}
-      wrapperCol={{ span: 18 }}
+      labelCol={{ span: 4 }}
+      wrapperCol={{ span: 20 }}
     >
       <FormItemDefault name='_id' hidden>
         <Input />
@@ -126,8 +121,8 @@ export default function Modelo(){
         name='customizado'
         label='Customizado'
         style={{width:'150px', marginLeft:'50px'}}
-        labelCol={{ span: 15 }}
-        wrapperCol={{ span: 9 }}
+        labelCol={{ span: 18 }}
+        wrapperCol={{ span: 6 }}
         valuePropName="checked"
         initialValue={true}
         >
