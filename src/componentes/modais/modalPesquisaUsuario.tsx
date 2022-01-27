@@ -2,18 +2,18 @@ import React from "react"
 import { Form, Input, Modal, Button } from 'antd'
 
 interface Props{
-  isModalVisible:boolean;
-  handleOk:()=>void;
-  handleCancel:()=>void;
+  estadoModalPesquisaUsuario:boolean;
+  quandoApertarOkUsuario:()=>void;
+  quandoApertarCancelUsuario:()=>void;
 }
 
-export default function ModalPesquisaUsuario({isModalVisible,handleOk,handleCancel}:Props) {
+export default function ModalPesquisaUsuario({estadoModalPesquisaUsuario,quandoApertarOkUsuario,quandoApertarCancelUsuario}:Props) {
   const { Search } = Input;
 
   return <Modal 
             title="Pesquisar usuário." 
-            visible={isModalVisible} 
-            onCancel={handleCancel}
+            visible={estadoModalPesquisaUsuario} 
+            onCancel={quandoApertarCancelUsuario}
             footer={[]}
             >
   <Form.Item
@@ -21,7 +21,7 @@ export default function ModalPesquisaUsuario({isModalVisible,handleOk,handleCanc
     name="pesquisa"
     rules={[{ required: true, message: 'Por favor, digite um usuário.' }]}
   >
-    <Search placeholder="Procurar usuário" onSearch={handleOk} enterButton />
+    <Search placeholder="Procurar usuário" onSearch={quandoApertarOkUsuario} enterButton />
   </Form.Item>
 </Modal>
 }

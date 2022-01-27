@@ -1,77 +1,62 @@
 import React, { useEffect, useState } from "react"
 import { Form, Input, Button, message, Row, Col, Popconfirm, Tag, Space, Table, Layout } from 'antd'
 import MaskedInput from 'antd-mask-input'
-import { SearchOutlined, DeleteFilled, PlusSquareOutlined, EditOutlined } from '@ant-design/icons'
+import { AppstoreAddOutlined, DeleteFilled, EditOutlined } from '@ant-design/icons'
 import { FormDefault, FormItemDefault, TitleDefault, GreenButton } from '../../styles/Form.styles'
 import { GetServerSideProps } from "next"
 import { LoadSSRProps } from '../loadSsrProps'
 import api from '../backendApi'
-import ModalEditar from '../componentes/modais/modalEditar'
-import ModalAdicionar from '../componentes/modais/modalAdicionar'
+import ModalEditarDispositivo from '../componentes/modais/modalEditarDispositivo'
 import ModalPesquisaUsuario from '../componentes/modais/modalPesquisaUsuario'
-import { Usuario } from '../componentes/interfaces/usuario'
-import { InfosDisp } from '../componentes/interfaces/infosDisp'
-import { Itens } from '../componentes/interfaces/itens'
+import { FiltroUsuario } from '../componentes/interfaces/filtroUsuario'
+import { FiltroDispositivo } from '../componentes/interfaces/filtroDispositivo'
+import { ColumnsType } from 'antd/es/table'
 
 interface Props {
-  modelosDB: Array<InfosDisp>
+  modelosDB: Array<FiltroDispositivo>
 }
 
 function Users({ modelosDB }: Props): JSX.Element {
-  const { Header, Sider, Content } = Layout;
+  const { Content } = Layout;
   const { Search } = Input;
-  const [cadastros] = Form.useForm()
+  const [formCadastroUsuario] = Form.useForm()
 
-  const [usuario, setUsuario] = useState<Usuario>()
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [ModalAdd, setModalAdd] = useState(false);
-  const [dispositivo, setDispositivo] = useState<InfosDisp>(undefined)
-  const [tabItens, setTabItens] = useState([])
-  const [modalEdit, setModalEdit] = useState(false);
+  const [usuario, setUsuario] = useState<FiltroUsuario>()
+  const [estadoModalPesquisaUsuario, setEstadoModalPesquisaUsuario] = useState(false);
+  const [dispositivoVaiParaModal, setDispositivoVaiParaModal] = useState<FiltroDispositivo>(undefined)
+  const [indexDispositivoSelecionadoEditar, setIndexDispositivoSelecionadoEditar] = useState()
 
+  const [estadoModalEditarDispositivo, setEstadoModalEditarDispositivo] = useState(false);
 
   const layout = {
     labelCol: { span: 4 },
     wrapperCol: { span: 20 },
   };
 
-  const showModal = () => {
-    setIsModalVisible(true);
+  const abrirModalPesquisaUsuario = () => {
+    setEstadoModalPesquisaUsuario(true);
   };
 
-  const handleOk = () => {
-    achaUser()
-    setIsModalVisible(false);
+  const quandoApertarOkUsuario = () => {
+    PesquisaUsuario()
+    setEstadoModalPesquisaUsuario(false);
   };
 
-  const handleCancel = () => {
-    setIsModalVisible(false);
+  const quandoApertarCancelUsuario = () => {
+    setEstadoModalPesquisaUsuario(false);
   };
 
-  /* Modal Adicionar dispositivo */
-  const showModalAdd = () => {
-    setModalAdd(true);
-  };
-
-  const handleOkAdd = () => {
-    setModalAdd(false);
-  };
-
-  const handleCancelAdd = () => {
-    setModalAdd(false);
-  };
-
-  const showModalEdit = () => {
-    setModalEdit(true);
+  const mostraModalEditDispositivo = () => {
+    setEstadoModalEditarDispositivo(true);
   };
   const closeModalEdit = () => {
-    setModalEdit(false);
+    setEstadoModalEditarDispositivo(false);
   };
 
-  const achaUser = async () => {
+  const PesquisaUsuario = async () => {
     const key = 'user'
     message.loading({ content: 'Um momento, por favor...', key });
-    await api.get(`usuarios/pesquisausuario?nomeUser=${cadastros.getFieldValue("pesquisa")}`)
+    await api.get(`usuarios/pesquisausuario?nomeUser=${formCadastroUsuario.getFieldValue("pesquisa")}`)
       .then((retorno) => {
         message.success({ content: 'Usuário encontrado!', key });
         const usuarioVindo = {
@@ -96,45 +81,46 @@ function Users({ modelosDB }: Props): JSX.Element {
   useEffect(() => {
     if (!usuario) return
     console.log("Useeffect do usuário...")
-    cadastros.setFieldsValue(usuario)
+    formCadastroUsuario.setFieldsValue(usuario)
 
     console.log('tá chegando do useEffect')
-  }, [usuario, cadastros])
+  }, [usuario, formCadastroUsuario])
 
-  const deletar = async () => {
+  const deletarUsuario = async () => {
     let key = 'deletar'
     message.loading({ content: 'Um momento, por favor...', key });
-    await api.delete(`usuarios/${cadastros.getFieldValue("id")}`)
+    await api.delete(`usuarios/${formCadastroUsuario.getFieldValue("id")}`)
       .then((retorno) => {
         message.success({ content: 'Usuário deletado com sucesso!', key, duration: 2 });
-        cadastros.resetFields()
+        formCadastroUsuario.resetFields()
       }).catch((erro) => {
         message.error('Falha ao deletar o usuário, tente novamente.');
         console.log(erro)
       })
   }
 
-  const cancelar = () => { cadastros.resetFields();setUsuario(undefined) }
+  const cancelar = () => { formCadastroUsuario.resetFields(); setUsuario(undefined) }
 
-  const setValues = async valores => {
+  const enviaUsuarioBackEnd = async valoresDoFormUsuario => {
+    console.log('valores setValues')
+    console.log(valoresDoFormUsuario)
     const novoUser = {
-      nome: valores.nome,
-      id: valores.id,
-      email: valores.email,
-      fone: valores.fone.toString().replace(/\D/g, ""),
-      senha: valores.senha,
+      nome: formCadastroUsuario.getFieldValue('nome'),
+      id: valoresDoFormUsuario?.id,
+      email: formCadastroUsuario.getFieldValue('email'),
+      fone: formCadastroUsuario.getFieldValue('fone').toString().replace(/\D/g, ""),
+      senha: formCadastroUsuario.getFieldValue('senha'),
       dispositivos: usuario?.dispositivos
     }
     console.log('Valores do formulário')
     console.log(novoUser)
-    const key = 'alterar'
-    if (valores.id) {
 
+    const key = 'alterar'
+    if (valoresDoFormUsuario.id) {
       message.loading({ content: 'Um momento, por favor...', key });
-      await api.put(`usuarios/${valores.id}`, novoUser).then((retorno) => {
-        console.log(retorno)
+      await api.put(`usuarios/${valoresDoFormUsuario.id}`, novoUser).then((retorno) => {
         message.success({ content: 'Alterado com sucesso!', key, duration: 2 });
-        cadastros.resetFields()
+        formCadastroUsuario.resetFields()
         setUsuario(undefined)
       }).catch((erro) => {
         message.error('Falha ao editar usuário, tente novamente.');
@@ -144,9 +130,8 @@ function Users({ modelosDB }: Props): JSX.Element {
       message.loading({ content: 'Um momento, por favor...', key });
       await api.post('novoUsuario', novoUser).then((retorno) => {
         message.success({ content: 'Cadastrado com sucesso!', key, duration: 2 });
-        cadastros.resetFields()
+        formCadastroUsuario.resetFields()
         setUsuario(undefined)
-        console.log(retorno)
       }).catch((erro) => {
         message.error('Falha ao cadastrar usuário, tente novamente.');
         console.log(erro)
@@ -157,30 +142,33 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   //Tabela
 
-  const columns = [
+  const columns: ColumnsType<any> = [
     {
       title: 'Nome',
       dataIndex: 'nome',
+      key:'nome'
     },
     {
       title: 'Modelo',
       dataIndex: ['modelo', 'nome'],
+      key:'nomeModelo'
     },
     {
       title: 'Itens',
       dataIndex: 'itens',
+      key:'itens',
       render: (itens) => (
         <>
-          {itens.map((item) => {
+          {itens?.map((item) => {
             return <Tag color='geekblue'>{item.nome}</Tag>
           })}
         </>
-
       )
     },
     {
       title: 'Ativo',
       dataIndex: 'ativo',
+      key:'ativo',
       render: (ativo: boolean) => (
         <Tag color={ativo ? 'green' : 'volcano'}>
           {ativo ? 'Sim' : 'Não'}
@@ -190,16 +178,17 @@ function Users({ modelosDB }: Props): JSX.Element {
     {
       title: 'Editar/Deletar',
       dataIndex: 'Acao',
-      render: (nome, record) => (
+      key:'acao',
+      render: (nome, record,index) => (
         <Space>
           <Button onClick={() => {
-            onEditDispositivo(record)
+            abriModalEditaDispositivo(record,index)
           }} style={{ color: "yellow" }}>
             <EditOutlined />
           </Button>
           <Popconfirm
             title="Tem certeza que deseja excluir este dispositivo?"
-            onConfirm={()=>onDeleteDispositivo(record)}
+            onConfirm={() => deletarDispositivo(record,index)}
             okText="Sim"
             cancelText="Não"
           >
@@ -215,98 +204,48 @@ function Users({ modelosDB }: Props): JSX.Element {
   ];
 
 
-  const onEditDispositivo = (record) => {
-    console.log('usuario antes add')
-    console.log(usuario)
-    console.log('record interno')
-    console.log(record)
-    setDispositivo(record)
-    showModalEdit()
-
+  const abriModalEditaDispositivo = (record,index) => {
+    setDispositivoVaiParaModal(record)
+    setIndexDispositivoSelecionadoEditar(index)
+    mostraModalEditDispositivo()
   }
 
-  //send
-  const sendEditDispositivo = async (valores) => {
-    console.log('valores')
-    console.log(valores)
+  //Editar/Adicionar
+  const editaAdicionaDispositivo = async (valoresVindosModal,dispAtualizado) => {
+    console.log('valores vindos da modal send')
+    console.log(valoresVindosModal)
 
-    const novoModelo = await api.get(`modelosid/${valores.idModelo}`).then(resultado => {
-      return resultado.data
-    }).catch(resultado => {
-      console.log('retorno deu errado')
-      console.log(resultado)
-    })
-
-    const dispositivoEscolhido = usuario.dispositivos.find(dispositivo => {
-      return dispositivo._id == valores.idDispositivo
-    })
-
-    console.log('dispositivoEscolhido')
-    console.log(dispositivoEscolhido)
-
-    const novoDispositivo = {
-      ativo: valores.ativo,
-      _id: valores.idDispositivo,
-      idModelo: dispositivoEscolhido.modelo._id,
-      itens: tabItens,
-      nome: valores.nome,
-      modelo: novoModelo,
-      nrserie: dispositivoEscolhido.nrserie,
-      senha: dispositivoEscolhido.senha
+    if(!valoresVindosModal._id){
+      const dispositivoAtual=usuario?.dispositivos || [];
+      dispositivoAtual.push(dispAtualizado)
+      let novoUsuario = {
+        nome: usuario?.nome || formCadastroUsuario.getFieldValue('nome'),
+        fone: usuario?.fone || formCadastroUsuario.getFieldValue('fone'),
+        email: usuario?.email || formCadastroUsuario.getFieldValue('email'),
+        dispositivos: dispositivoAtual,
+        senha: usuario?.senha || formCadastroUsuario.getFieldValue('senha'),
+        id: usuario?.id
+      }
+      setUsuario(novoUsuario)
+    }else{
+      const dispositivoAtual=usuario.dispositivos;
+      dispositivoAtual.splice(indexDispositivoSelecionadoEditar,1,dispositivoVaiParaModal)
+      let novoUsuario = {
+        nome: usuario?.nome || formCadastroUsuario.getFieldValue('nome'),
+        fone: usuario?.fone || formCadastroUsuario.getFieldValue('fone'),
+        email: usuario?.email || formCadastroUsuario.getFieldValue('email'),
+        dispositivos: dispositivoAtual,
+        senha: usuario?.senha || formCadastroUsuario.getFieldValue('senha'),
+        id: usuario?.id
+      }
+      setUsuario(novoUsuario)
     }
-
-
-    let index = usuario.dispositivos.findIndex(dispositivo => {
-      return dispositivo._id != valores.idDispositivo
-    })
-
-    if (novoDispositivo) usuario.dispositivos.splice(index, 1, novoDispositivo)
-    setModalEdit(false)
   }
 
-  const addDispositivo = async (valores) => {
-    valores.itens = []
-    const key = 'addDisp'
-    message.loading({ content: 'Um momento, por favor...', key })
-    // const novoDispositivo = await axios.post(`http://localhost:3001/novoDispositivo`,{valores}).then((retorno) => {
-    const novoDispositivo = await api.post(`novoDispositivo`, { valores }).then((retorno) => {
-      message.success({ content: 'Dispositivo cadastrado com sucesso!', key, duration: 2 });
-      console.log(retorno)
-      setModalAdd(false);
-      return retorno.data
-    }).catch((erro) => {
-      message.error('Falha ao deletar o usuário, tente novamente.');
-      console.log(erro)
-      return undefined
-    })
+  async function deletarDispositivo(record,index) {
 
-    const dispositivosAtuais = usuario.dispositivos || []
-    if (novoDispositivo) dispositivosAtuais.push(novoDispositivo)
-
-    const novoUsuario = {
-      nome: usuario.nome,
-      fone: usuario.fone,
-      email: usuario.email,
-      dispositivos: dispositivosAtuais,
-      senha: usuario.senha,
-      id: usuario.id
-    }
-
-    console.log('novoUsuario')
-    console.log(novoUsuario)
-
-    setUsuario(novoUsuario)
-    console.log('usuario apos add')
-    console.log(usuario)
-
-  }
-
-  async function onDeleteDispositivo(record) {
-
-    let novoDispositivos = usuario.dispositivos.filter(dispo => {
-      return dispo._id != record._id
-    })
-
+    let novoDispositivos = usuario.dispositivos
+    novoDispositivos.splice(index,1)
     let novoUsuario = {
       nome: usuario.nome,
       fone: usuario.fone,
@@ -322,7 +261,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   let selecionados
   const rowSelection = {
-    onChange: (selectedRowKeys: React.Key[], selectedRows: InfosDisp[]) => {
+    onChange: (selectedRowKeys: React.Key[], selectedRows: FiltroDispositivo[]) => {
       selecionados = selectedRows
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
 
@@ -341,8 +280,8 @@ function Users({ modelosDB }: Props): JSX.Element {
           name="basic"
           initialValues={{ remember: false }}
           autoComplete="off"
-          form={cadastros}
-          onFinish={setValues}
+          form={formCadastroUsuario}
+          onFinish={enviaUsuarioBackEnd}
           {...layout}
         >
           <Row>
@@ -361,7 +300,7 @@ function Users({ modelosDB }: Props): JSX.Element {
                   label="Nome"
                   rules={[{ required: true, message: 'Por favor, digite um E-mail.' }]}
                 >
-                  <Search placeholder="Nome" onSearch={showModal} enterButton />
+                  <Search placeholder="Nome" onSearch={abrirModalPesquisaUsuario} enterButton />
 
                 </FormItemDefault>
 
@@ -370,7 +309,7 @@ function Users({ modelosDB }: Props): JSX.Element {
                   name="email"
                   rules={[
                     { required: true, message: 'Por favor, digite um E-mail.' },
-                    {type:'email',message:'Formato de e-mail inválido.'}
+                    { type: 'email', message: 'Formato de e-mail inválido.' }
                   ]}
                 >
                   <Input placeholder="usuário@gmail.com" />
@@ -388,35 +327,24 @@ function Users({ modelosDB }: Props): JSX.Element {
                 <FormItemDefault
                   label="Senha"
                   name="senha"
-                  rules={[{ required: true, message: 'Por favor, digite sua senha.' }]}
+                  rules={[{ required: usuario?.id ? false : true, message: 'Por favor, digite sua senha.' }]}
+                  style={usuario?.id ? { display: 'none' } : { display: 'flex' }}
                 >
                   <Input.Password />
                 </FormItemDefault>
 
                 <ModalPesquisaUsuario
-                  isModalVisible={isModalVisible}
-                  handleOk={handleOk}
-                  handleCancel={handleCancel}
-
+                  estadoModalPesquisaUsuario={estadoModalPesquisaUsuario}
+                  quandoApertarOkUsuario={quandoApertarOkUsuario}
+                  quandoApertarCancelUsuario={quandoApertarCancelUsuario}
                 />
 
-                <ModalEditar
-                  modalEdit={modalEdit}
+                <ModalEditarDispositivo
+                  estadoModalEditarDispositivo={estadoModalEditarDispositivo}
                   closeModalEdit={closeModalEdit}
-                  sendEditDispositivo={sendEditDispositivo}
-                  dispositivo={dispositivo}
-                  modelosDB={modelosDB}
-                  usuario={usuario}
-                  setUsuario={setUsuario}
-                  setTabItens={setTabItens}
-                  tabItens={tabItens}
-                />
-
-                <ModalAdicionar
-                  ModalAdd={ModalAdd}
-                  handleOkAdd={handleOkAdd}
-                  handleCancelAdd={handleCancelAdd}
-                  addDispositivo={addDispositivo}
+                  editaAdicionaDispositivo={editaAdicionaDispositivo}
+                  setDispositivoVaiParaModal={setDispositivoVaiParaModal}
+                  dispositivoVindoParaModal={dispositivoVaiParaModal}
                   modelosDB={modelosDB}
                 />
 
@@ -425,7 +353,7 @@ function Users({ modelosDB }: Props): JSX.Element {
             </Col>
 
             <Col span={12}>
-              <GreenButton type="primary" onClick={showModalAdd}> Adicionar Dispositivo </GreenButton>
+              <GreenButton type="primary" onClick={() => { setDispositivoVaiParaModal(undefined); mostraModalEditDispositivo(); }}> Adicionar Dispositivo </GreenButton>
               <Table
                 rowSelection={{
                   type: 'checkbox',
@@ -433,6 +361,8 @@ function Users({ modelosDB }: Props): JSX.Element {
                 }}
                 columns={columns}
                 dataSource={usuario ? [...usuario?.dispositivos] : []}
+                pagination={{ pageSize: 4 }}
+                locale={{ emptyText: (<><AppstoreAddOutlined style={{ fontSize: '50px' }} /> <p style={{ fontSize: '30px' }}>Nenhum dispositivo.</p></>) }}
               />
             </Col>
             <FormItemDefault >
@@ -443,7 +373,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
                 <Popconfirm placement="bottom"
                   title={'Tem certeza que dejesa excluir?'}
-                  onConfirm={deletar}
+                  onConfirm={deletarUsuario}
                   okText="Sim"
                   cancelText="Não">
                   <Button>Excluir</Button>
@@ -474,6 +404,7 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   )
 }
+
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   try {

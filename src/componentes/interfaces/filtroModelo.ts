@@ -1,4 +1,4 @@
-export interface InfosMod {
+export interface FiltroModelo {
     _id: string;
     nome: string;
     prefSerie: string;
