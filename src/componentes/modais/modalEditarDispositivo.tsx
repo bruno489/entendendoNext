@@ -26,9 +26,9 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
   const [sensor, setSensor] = useState<boolean>()
   const [ligado, setLigado] = useState<boolean>()
   const [ativo, setAtivo] = useState<boolean>()
-  const [dispAtualizado,setDispAtualizado] = useState<FiltroDispositivo>()
+  const [dispAtualizado,setDispAtualizado] = useState<FiltroDispositivo>(undefined)
   const [formEditaDispositivo] = Form.useForm()
-  const [itemEnviar,setItemEnviar] = useState<Array<FiltroItens>>()
+  const [itemEnviar,setItemEnviar] = useState<Array<FiltroItens>>([])
 
   useEffect(() => {
     console.log('dispositivo useffect da modal')
@@ -107,29 +107,16 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
   function deleteItem(valores,index) {
     console.log('valores delete item')
     console.log(valores)
-    
-    const novosItens = itemEnviar
-    novosItens.splice(index,1)
 
-    console.log('novosItens')
-    console.log(novosItens)
-
-    setItemEnviar(novosItens)
+    setItemEnviar(itemEnviar.filter((item, idx) => idx !== index ))
   }
 
   async function addItem(valores: FiltroItens) {
     console.log('valores para add item')
     console.log(valores)
 
-    const novoModelo = await api.get(`modelosid/${formEditaDispositivo.getFieldValue('idModelo')}`).then(resultado => {
-      return resultado.data
-    }).catch(resultado => {
-      console.log('retorno deu errado')
-      console.log(resultado)
-    })
-
     const item = {
-      _id: valores._id || (Math.random()*1000).toString(),
+      _id: valores._id || null,
       nome: valores.nome,
       sensor: valores.sensor || false,
       ligado: valores.ligado || false,
@@ -137,25 +124,18 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
       leituras: []
     }
 
-    const itensAtualizado = dispositivoVindoParaModal?.itens || []
     if (valores.index>=0) {
       console.log('entrou no if do item')
-      itensAtualizado.splice(valores.index,1,item)
+      setItemEnviar(itens => [
+        ...itens.slice(0, valores.index),
+        item,
+        ...itens.slice(valores.index + 1),
+      ])
     } else {
       console.log('entrou no else do item')
-      itensAtualizado.push(item)
+      setItemEnviar([...itemEnviar, item])
     }
 
-    const novoDispositivo = {
-      ativo: formEditaDispositivo.getFieldValue('ativo'),
-      idModelo: formEditaDispositivo.getFieldValue('idModelo'),
-      itens: itensAtualizado,
-      modelo: novoModelo,
-      nome: formEditaDispositivo.getFieldValue('nome'),
-      senha: undefined,
-      _id: (Math.random()*1000).toString()
-    }
-    setDispAtualizado(novoDispositivo)
     cadItens.resetFields()
   }
 
@@ -234,6 +214,7 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
 
     <Title level={4}>Adicionar itens</Title>
     <Form
+      name="formAddItem"
       onFinish={addItem}
       form={cadItens}
     >
@@ -267,7 +248,7 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
 
       <FormItemDefault>
         <Space>
-          <Button type="primary" htmlType="submit">Adicionar item</Button>
+          <Button type="primary" htmlType="submit" form="formAddItem">Adicionar item</Button>
           <Button onClick={cancelCadItens}>Cancelar</Button>
         </Space>
       </FormItemDefault>

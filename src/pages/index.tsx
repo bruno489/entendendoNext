@@ -159,8 +159,8 @@ function Users({ modelosDB }: Props): JSX.Element {
       key:'itens',
       render: (itens) => (
         <>
-          {itens?.map((item) => {
-            return <Tag color='geekblue'>{item.nome}</Tag>
+          {itens?.map((item, idx) => {
+            return <Tag key={idx} color='geekblue'>{item.nome}</Tag>
           })}
         </>
       )

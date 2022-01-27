@@ -3,13 +3,13 @@ import { GetServerSideProps } from "next"
 import { Form, Input, Button, Space, message, Row, Switch, Popconfirm, Select } from 'antd'
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import { FormDefault, ColDefault as Col, FormItemDefault, TitleDefault } from '../../styles/Form.styles'
-import { Usuario } from '../componentes/interfaces/usuario'
-import { InfosDisp } from '../componentes/interfaces/infosDisp'
+
 import api from "../backendApi";
 import { LoadSSRProps } from '../loadSsrProps'
+import { FiltroDispositivo } from "../componentes/interfaces/filtroDispositivo";
 
 interface Props {
-  modelos: Array<InfosDisp>
+  modelos: Array<FiltroDispositivo>
 }
 
 interface dispositivo {
