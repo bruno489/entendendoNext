@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
-import { Form, Input, Table, Row, Space, Col, Button, Tag, Select, Modal, Switch, Divider, Popconfirm, Typography } from 'antd'
+import { Form, Input, Table, Row, Space, Col, Button, Tag, Select, Modal, Switch, Divider, Popconfirm, Typography, Result } from 'antd'
 import { AppstoreAddOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
 import { FormDefault, FormItemDefault } from '../../../styles/Form.styles'
 import { FiltroDispositivo } from '../interfaces/filtroDispositivo'
@@ -11,7 +11,7 @@ import api from "../../backendApi"
 interface Props {
   estadoModalEditarDispositivo: boolean;
   closeModalEdit: () => void;
-  editaAdicionaDispositivo: (dispositivo: FiltroDispositivo, index?:number) => Promise<void>;
+  editaAdicionaDispositivo: (novoDispositivo:FiltroDispositivo)=>void;
   dispositivoVindoParaModal?: FiltroDispositivo;
   setDispositivoVaiParaModal: Dispatch<SetStateAction<FiltroDispositivo>>;
   modelosDB: Array<FiltroDispositivo>;
@@ -26,7 +26,6 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
   const [sensor, setSensor] = useState<boolean>()
   const [ligado, setLigado] = useState<boolean>()
   const [ativo, setAtivo] = useState<boolean>()
-  const [dispAtualizado,setDispAtualizado] = useState<FiltroDispositivo>(undefined)
   const [formEditaDispositivo] = Form.useForm()
   const [itemEnviar,setItemEnviar] = useState<Array<FiltroItens>>([])
 
@@ -35,9 +34,11 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
     console.log(dispositivoVindoParaModal)
     if (dispositivoVindoParaModal) {
       formEditaDispositivo.setFieldsValue(dispositivoVindoParaModal)
+      formEditaDispositivo.setFieldsValue({idModelo:dispositivoVindoParaModal.modelo._id})
       setItemEnviar(dispositivoVindoParaModal.itens)
     }
   }, [dispositivoVindoParaModal])
+
 
   const columns: ColumnsType<any>= [
     {
@@ -140,15 +141,35 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
   }
 
   const cancelCadItens = () => {
-    //cadEditaDisp.resetFields()
+    formEditaDispositivo.resetFields()
     cadItens.resetFields()
   }
 
-  const envia = (valores) => {
-    //editaAdicionaDispositivo(valores,dispAtualizado)
+  const envia = async (valores) => {
+    const novoModelo=await api.get(`/modelosid/${valores.idModelo}`).then(resultado=>{
+      return resultado.data
+    }).catch(Result=>{console.log(Result)})
+
+    const novoDispositivo = {
+      _id: null,
+      idModelo: valores.idModelo,
+      nome: valores.nome,
+      itens: itemEnviar,
+      modelo: novoModelo,
+      ativo: valores.ativo
+    }
+
+    console.log('novoDispositivo na itens')
+    console.log(novoDispositivo)
+
+    setDispositivoVaiParaModal(undefined)
     formEditaDispositivo.resetFields()
+    cadItens.resetFields()
+    setItemEnviar([])
     closeModalEdit()
   }
+
+
 
   return <Modal title="Editar"
     visible={estadoModalEditarDispositivo}
@@ -156,7 +177,7 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
     width={800}
 
     footer={[
-      <Button key="back" onClick={() => { formEditaDispositivo.resetFields(); closeModalEdit(); }}>
+      <Button key="back" onClick={() => { formEditaDispositivo.resetFields(); closeModalEdit(); setItemEnviar([]); }}>
         Cancelar
       </Button>,
       <Button key="submit" form="formEditDispositivo" type="primary" htmlType="submit">

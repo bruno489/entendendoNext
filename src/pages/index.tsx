@@ -23,9 +23,9 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   const [usuario, setUsuario] = useState<FiltroUsuario>()
   const [estadoModalPesquisaUsuario, setEstadoModalPesquisaUsuario] = useState(false);
+  // const [dispositivoAdicionar, setdispositivoAdicionar] = useState<Array<FiltroDispositivo>>([])
   const [dispositivoVaiParaModal, setDispositivoVaiParaModal] = useState<FiltroDispositivo>(undefined)
-  const [indexDispositivoSelecionadoEditar, setIndexDispositivoSelecionadoEditar] = useState()
-
+  const [indexDispositivoSelecionadoEditar, setIndexDispositivoSelecionadoEditar] = useState(-1)
   const [estadoModalEditarDispositivo, setEstadoModalEditarDispositivo] = useState(false);
 
   const layout = {
@@ -51,6 +51,7 @@ function Users({ modelosDB }: Props): JSX.Element {
   };
   const closeModalEdit = () => {
     setEstadoModalEditarDispositivo(false);
+    setDispositivoVaiParaModal(undefined)
   };
 
   const PesquisaUsuario = async () => {
@@ -82,8 +83,6 @@ function Users({ modelosDB }: Props): JSX.Element {
     if (!usuario) return
     console.log("Useeffect do usuário...")
     formCadastroUsuario.setFieldsValue(usuario)
-
-    console.log('tá chegando do useEffect')
   }, [usuario, formCadastroUsuario])
 
   const deletarUsuario = async () => {
@@ -146,17 +145,17 @@ function Users({ modelosDB }: Props): JSX.Element {
     {
       title: 'Nome',
       dataIndex: 'nome',
-      key:'nome'
+      key: 'nome'
     },
     {
       title: 'Modelo',
       dataIndex: ['modelo', 'nome'],
-      key:'nomeModelo'
+      key: 'nomeModelo'
     },
     {
       title: 'Itens',
       dataIndex: 'itens',
-      key:'itens',
+      key: 'itens',
       render: (itens) => (
         <>
           {itens?.map((item, idx) => {
@@ -168,7 +167,7 @@ function Users({ modelosDB }: Props): JSX.Element {
     {
       title: 'Ativo',
       dataIndex: 'ativo',
-      key:'ativo',
+      key: 'ativo',
       render: (ativo: boolean) => (
         <Tag color={ativo ? 'green' : 'volcano'}>
           {ativo ? 'Sim' : 'Não'}
@@ -178,17 +177,17 @@ function Users({ modelosDB }: Props): JSX.Element {
     {
       title: 'Editar/Deletar',
       dataIndex: 'Acao',
-      key:'acao',
-      render: (nome, record,index) => (
+      key: 'acao',
+      render: (nome, record, index) => (
         <Space>
           <Button onClick={() => {
-            abriModalEditaDispositivo(record,index)
+            abriModalEditaDispositivo(record, index)
           }} style={{ color: "yellow" }}>
             <EditOutlined />
           </Button>
           <Popconfirm
             title="Tem certeza que deseja excluir este dispositivo?"
-            onConfirm={() => deletarDispositivo(record,index)}
+            onConfirm={() => deletarDispositivo(record, index)}
             okText="Sim"
             cancelText="Não"
           >
@@ -204,48 +203,62 @@ function Users({ modelosDB }: Props): JSX.Element {
   ];
 
 
-  const abriModalEditaDispositivo = (record,index) => {
+  const abriModalEditaDispositivo = (record, index) => {
     setDispositivoVaiParaModal(record)
     setIndexDispositivoSelecionadoEditar(index)
     mostraModalEditDispositivo()
   }
 
   //Editar/Adicionar
-  const editaAdicionaDispositivo = async (valoresVindosModal,dispAtualizado) => {
-    console.log('valores vindos da modal send')
-    console.log(valoresVindosModal)
+  const editaAdicionaDispositivo = (dispositivoAtualizado:FiltroDispositivo) => {
+    console.log('index vindo para a função')
+    console.log(indexDispositivoSelecionadoEditar)
+    console.log('dispositivoAtualizado no edita/add')
+    console.log(dispositivoAtualizado)
 
-    if(!valoresVindosModal._id){
-      const dispositivoAtual=usuario?.dispositivos || [];
-      dispositivoAtual.push(dispAtualizado)
-      let novoUsuario = {
-        nome: usuario?.nome || formCadastroUsuario.getFieldValue('nome'),
-        fone: usuario?.fone || formCadastroUsuario.getFieldValue('fone'),
-        email: usuario?.email || formCadastroUsuario.getFieldValue('email'),
-        dispositivos: dispositivoAtual,
-        senha: usuario?.senha || formCadastroUsuario.getFieldValue('senha'),
-        id: usuario?.id
-      }
-      setUsuario(novoUsuario)
-    }else{
-      const dispositivoAtual=usuario.dispositivos;
-      dispositivoAtual.splice(indexDispositivoSelecionadoEditar,1,dispositivoVaiParaModal)
-      let novoUsuario = {
-        nome: usuario?.nome || formCadastroUsuario.getFieldValue('nome'),
-        fone: usuario?.fone || formCadastroUsuario.getFieldValue('fone'),
-        email: usuario?.email || formCadastroUsuario.getFieldValue('email'),
-        dispositivos: dispositivoAtual,
-        senha: usuario?.senha || formCadastroUsuario.getFieldValue('senha'),
-        id: usuario?.id
-      }
-      setUsuario(novoUsuario)
+    const dispositivosDoUsuario = usuario.dispositivos
+    let novoDispositivo = []
+
+    if (indexDispositivoSelecionadoEditar>=0) {
+      console.log('entrou no if do dispositivo')
+
+      novoDispositivo = [
+        ...dispositivosDoUsuario.slice(0, indexDispositivoSelecionadoEditar),
+        dispositivoAtualizado,
+        ...dispositivosDoUsuario.slice(indexDispositivoSelecionadoEditar + 1),
+      ]
+
+      console.log('novoDispositivo')
+      console.log(novoDispositivo)
+    } else {
+      console.log('entrou no else do dispositivo')
+      novoDispositivo = [...dispositivosDoUsuario, dispositivoAtualizado]
+
+      console.log('novoDispositivo')
+      console.log(novoDispositivo)
     }
+
+    let novoUsuario = {
+      nome: usuario?.nome || formCadastroUsuario.getFieldValue('nome'),
+      fone: usuario?.fone || formCadastroUsuario.getFieldValue('fone'),
+      email: usuario?.email || formCadastroUsuario.getFieldValue('email'),
+      dispositivos: novoDispositivo,
+      senha: usuario?.senha || formCadastroUsuario.getFieldValue('senha'),
+      id: usuario?.id
+    }
+    setUsuario(novoUsuario)
+
+    console.log('Usuário pos preparo')
+    console.log(novoUsuario)
+
+    setIndexDispositivoSelecionadoEditar(-1)
+
   }
 
-  async function deletarDispositivo(record,index) {
+  async function deletarDispositivo(record, index) {
 
     let novoDispositivos = usuario.dispositivos
-    novoDispositivos.splice(index,1)
+    novoDispositivos.splice(index, 1)
     let novoUsuario = {
       nome: usuario.nome,
       fone: usuario.fone,
