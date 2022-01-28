@@ -151,7 +151,7 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
     }).catch(Result=>{console.log(Result)})
 
     const novoDispositivo = {
-      _id: null,
+      _id: valores._id || null,
       idModelo: valores.idModelo,
       nome: valores.nome,
       itens: itemEnviar,
@@ -162,6 +162,7 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
     console.log('novoDispositivo na itens')
     console.log(novoDispositivo)
 
+    editaAdicionaDispositivo(novoDispositivo)
     setDispositivoVaiParaModal(undefined)
     formEditaDispositivo.resetFields()
     cadItens.resetFields()
@@ -193,7 +194,7 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
       wrapperCol={{ span: 20 }}
     >
       <FormItemDefault
-        name='id'
+        name='_id'
         hidden
       >
         <Input />
