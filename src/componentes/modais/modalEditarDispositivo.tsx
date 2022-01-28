@@ -156,7 +156,7 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
       nome: valores.nome,
       itens: itemEnviar,
       modelo: novoModelo,
-      ativo: valores.ativo
+      ativo: valores.ativo || false
     }
 
     console.log('novoDispositivo na itens')
