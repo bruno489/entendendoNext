@@ -49,6 +49,7 @@ export default function Modelo(){
     message.loading({ content: 'Um momento, por favor...', key });
     await api.get(`modelos/${nome}`).then((retorno)=>{
       setModelo(retorno.data)
+      if(!retorno.data){message.error({ content: 'O Modelo pesquisado não existe.', key }); return};
       message.success({ content: 'Encontrado com sucesso!', key });
     }).catch((retorno)=>{
       message.error({content:"Falha ao encontrar",key})

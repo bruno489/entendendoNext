@@ -51,7 +51,7 @@ function Users({ modelos }: Props): JSX.Element {
       if (!retorno.data) message.error('Dispositivo não encontrado');
 
     }).catch((erro) => {
-      message.error({content:'Falha ao encontrar dispositivo.',key})
+      message.error({content:'Dispositivo não encontrado.',key})
       console.log(erro)
     })
 

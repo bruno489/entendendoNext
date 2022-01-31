@@ -56,10 +56,10 @@ function Users({ modelosDB }: Props): JSX.Element {
         }
         setUsuario(usuarioVindo)
 
-        if (!retorno.data) message.error('Usuário não encontrado');
+        if (!retorno.data) {message.error({content:'Usuário não encontrado.',key}); return}
 
       }).catch((erro) => {
-        message.error('Erro ao encontrar usuário.')
+        message.error({content:'Usuário não encontrado.',key})
         console.log(erro)
       })
 
@@ -202,7 +202,7 @@ function Users({ modelosDB }: Props): JSX.Element {
     console.log('dispositivoAtualizado no edita/add')
     console.log(dispositivoAtualizado)
 
-    const dispositivosDoUsuario = usuario.dispositivos
+    const dispositivosDoUsuario = usuario?.dispositivos || []
     let novoDispositivo = []
 
     if (indexDispositivoSelecionadoEditar>=0) {
