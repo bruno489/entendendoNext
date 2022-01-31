@@ -56,7 +56,7 @@ function Users({ modelosDB }: Props): JSX.Element {
         }
         setUsuario(usuarioVindo)
 
-        if (!retorno.data) {message.error({content:'Usuário não encontrado.',key}); return}
+        if (!retorno.data){message.error({content:'Usuário não encontrado.',key}); return}
 
       }).catch((erro) => {
         message.error({content:'Usuário não encontrado.',key})
