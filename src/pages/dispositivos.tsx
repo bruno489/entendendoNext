@@ -3,23 +3,12 @@ import { GetServerSideProps } from "next"
 import { Form, Input, Button, Space, message, Row, Switch, Popconfirm, Select } from 'antd'
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import { FormDefault, ColDefault as Col, FormItemDefault, TitleDefault } from '../../styles/Form.styles'
-
 import api from "../backendApi";
 import { LoadSSRProps } from '../loadSsrProps'
 import { FiltroDispositivo } from "../componentes/interfaces/filtroDispositivo";
 
 interface Props {
   modelos: Array<FiltroDispositivo>
-}
-
-interface dispositivo {
-  idDisp: string;
-  nome: string;
-  idModelo: string;
-  ativo: boolean;
-  itens: Array<string>;
-  senha: string;
-  nrSerie: string;
 }
 
 interface infoCadast {
@@ -33,22 +22,25 @@ function Users({ modelos }: Props): JSX.Element {
   const { Option } = Select;
   const [cadastros] = Form.useForm()
 
-  const [disposVindo, setDisp] = useState<dispositivo>()
+  const [disposVindo, setDisp] = useState<FiltroDispositivo>()
   const [infoCadastrado, setInfoCadastrado] = useState<infoCadast>()
 
   const achaUser = async () => {
     const key = 'busca'
+    const nome=cadastros.getFieldValue("nome")
+    if(nome=='' || !nome){message.error({ content: 'Por favor, digite o nome.', key });return}
     message.loading({content:'Um momento, por favor...',key})
-    await api.get(`dispositivos/${cadastros.getFieldValue("nome")}`).then((retorno) => {
-      message.success({content:'Usuário encontrado com sucesso!',key})
-      const dispositivo: dispositivo = {
-        idDisp: retorno.data._id,
+    await api.get(`dispositivos/${nome}`).then((retorno) => {
+      message.success({content:'Dispositivo encontrado com sucesso!',key})
+      const dispositivo: FiltroDispositivo = {
+        _id: retorno.data._id,
         nome: retorno.data.nome,
         idModelo: retorno.data.modelo._id,
         ativo: retorno.data.ativo,
+        modelo:retorno.data.modelo,
         itens: [],
         senha: retorno.data.senha,
-        nrSerie: retorno.data.nrSerie,
+        nrserie: retorno.data.nrSerie,
       }
       const retornoCadastro: infoCadast = {
         senha: retorno.data.senha,
@@ -59,7 +51,7 @@ function Users({ modelos }: Props): JSX.Element {
       if (!retorno.data) message.error('Dispositivo não encontrado');
 
     }).catch((erro) => {
-      message.error({content:'Falha ao encontrar usuário.',key})
+      message.error({content:'Falha ao encontrar dispositivo.',key})
       console.log(erro)
     })
 
@@ -77,44 +69,53 @@ function Users({ modelos }: Props): JSX.Element {
   const deletar = async () => {
     const key='delete'
     message.loading({ content: 'Um momento, por favor...', key });
-    await api.delete(`dispositivo/${cadastros.getFieldValue("idDisp")}`).then((retorno) => {
-      message.success({ content: 'Usuário deletado com sucesso!', key, duration: 2 });
+    await api.delete(`dispositivo/${cadastros.getFieldValue("_id")}`).then((retorno) => {
+      message.success({ content: 'Dispositivo deletado com sucesso!', key, duration: 2 });
       cadastros.resetFields()
+      setInfoCadastrado(undefined)
       console.log(retorno)
     }).catch((erro) => {
-      message.error({content:'Falha ao deletar o usuário, tente novamente.',key});
+      message.error({content:'Falha ao deletar o dispositivo, tente novamente.',key});
       console.log(erro)
     })
   }
 
-  const cancelar = () => { cadastros.resetFields(); setInfoCadastrado(undefined) }
+  const limpaFormDispositivo = () => { cadastros.resetFields(); setInfoCadastrado(undefined) }
 
-  const setValues = async valores => {
+  const enviaParaBackEnd = async (valores) => {
     const key='set'
     message.loading({ content: 'Um momento, por favor...', key });
-    const novoDispositivo = {
-      idDisp: valores.idDisp,
+
+    const modeloEncontrado = await api.get(`/modelosid/${valores.idModelo}`).then(retorno=>{
+      return retorno.data
+    }).catch(retorno=>{
+      console.log(retorno)
+    })
+
+    const novoDispositivo:FiltroDispositivo = {
+      _id: valores?._id,
       nome: valores.nome,
       idModelo: valores.idModelo,
-      ativo: valores.ativo,
+      modelo:modeloEncontrado,
+      ativo: valores.ativo || false,
       itens: []
     }
     console.log('Valores do formulário')
     console.log(novoDispositivo)
 
-    if (valores.idDisp) {
+    if (valores._id) {
       
-      await api.put(`dispositivos/${valores.idDisp}`, novoDispositivo).then((retorno) => {
+      await api.put(`dispositivos/${valores._id}`, novoDispositivo).then((retorno) => {
         console.log(retorno)
         const retornoCadastro: infoCadast = {
           senha: retorno.data.senha,
           nrSerie: retorno.data.nrSerie
         }
-        message.success({ content: 'Alterado com sucesso!', key, duration: 2 });
+        message.success({ content: 'Dispositivo alterado com sucesso!', key, duration: 2 });
         setInfoCadastrado(retornoCadastro)
         cadastros.resetFields()
       }).catch((erro) => {
-        message.error({content:'Falha ao editar usuário, tente novamente.',key});
+        message.error({content:'Falha ao editar dispositivo, tente novamente.',key});
         console.log(erro)
       })
     } else {
@@ -125,11 +126,11 @@ function Users({ modelos }: Props): JSX.Element {
           nrSerie: retorno.data.nrSerie
         }
         setInfoCadastrado(retornoCadastro)
-        message.success({ content: 'Cadastrado com sucesso!', key, duration: 2 });
+        message.success({ content: 'Dispositivo cadastrado com sucesso!', key, duration: 2 });
         cadastros.resetFields()
         console.log(retorno)
       }).catch((erro) => {
-        message.error({content:'Falha ao cadastrar usuário, tente novamente.',key});
+        message.error({content:'Falha ao cadastrar dispositivo, tente novamente.',key});
         console.log(erro)
       })
     }
@@ -147,11 +148,11 @@ function Users({ modelos }: Props): JSX.Element {
           initialValues={{ remember: false }}
           autoComplete="off"
           form={cadastros}
-          onFinish={setValues}
+          onFinish={enviaParaBackEnd}
           labelCol={{ span: 3 }}
           wrapperCol={{ span: 21 }}
         >
-          <FormItemDefault name='idDisp' hidden>
+          <FormItemDefault name='_id' hidden>
             <Input />
           </FormItemDefault>
           <FormItemDefault
@@ -210,7 +211,7 @@ function Users({ modelos }: Props): JSX.Element {
                 <Button>Excluir</Button>
               </Popconfirm>
 
-              <Button onClick={cancelar}>
+              <Button onClick={limpaFormDispositivo}>
                 Cancelar
               </Button>
             </Space>

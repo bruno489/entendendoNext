@@ -7,7 +7,6 @@ import { GetServerSideProps } from "next"
 import { LoadSSRProps } from '../loadSsrProps'
 import api from '../backendApi'
 import ModalEditarDispositivo from '../componentes/modais/modalEditarDispositivo'
-import ModalPesquisaUsuario from '../componentes/modais/modalPesquisaUsuario'
 import { FiltroUsuario } from '../componentes/interfaces/filtroUsuario'
 import { FiltroDispositivo } from '../componentes/interfaces/filtroDispositivo'
 import { ColumnsType } from 'antd/es/table'
@@ -22,8 +21,6 @@ function Users({ modelosDB }: Props): JSX.Element {
   const [formCadastroUsuario] = Form.useForm()
 
   const [usuario, setUsuario] = useState<FiltroUsuario>()
-  const [estadoModalPesquisaUsuario, setEstadoModalPesquisaUsuario] = useState(false);
-  // const [dispositivoAdicionar, setdispositivoAdicionar] = useState<Array<FiltroDispositivo>>([])
   const [dispositivoVaiParaModal, setDispositivoVaiParaModal] = useState<FiltroDispositivo>(undefined)
   const [indexDispositivoSelecionadoEditar, setIndexDispositivoSelecionadoEditar] = useState(-1)
   const [estadoModalEditarDispositivo, setEstadoModalEditarDispositivo] = useState(false);
@@ -31,19 +28,6 @@ function Users({ modelosDB }: Props): JSX.Element {
   const layout = {
     labelCol: { span: 4 },
     wrapperCol: { span: 20 },
-  };
-
-  const abrirModalPesquisaUsuario = () => {
-    setEstadoModalPesquisaUsuario(true);
-  };
-
-  const quandoApertarOkUsuario = () => {
-    PesquisaUsuario()
-    setEstadoModalPesquisaUsuario(false);
-  };
-
-  const quandoApertarCancelUsuario = () => {
-    setEstadoModalPesquisaUsuario(false);
   };
 
   const mostraModalEditDispositivo = () => {
@@ -57,7 +41,9 @@ function Users({ modelosDB }: Props): JSX.Element {
   const PesquisaUsuario = async () => {
     const key = 'user'
     message.loading({ content: 'Um momento, por favor...', key });
-    await api.get(`usuarios/pesquisausuario?nomeUser=${formCadastroUsuario.getFieldValue("pesquisa")}`)
+    const nome=formCadastroUsuario.getFieldValue("nome")
+    if(nome=='' || !nome){message.error({ content: 'Por favor, digite o nome.', key });return}
+    await api.get(`usuarios/pesquisausuario?nomeUser=${nome}`)
       .then((retorno) => {
         message.success({ content: 'Usuário encontrado!', key });
         const usuarioVindo = {
@@ -272,16 +258,6 @@ function Users({ modelosDB }: Props): JSX.Element {
 
   }
 
-  let selecionados
-  const rowSelection = {
-    onChange: (selectedRowKeys: React.Key[], selectedRows: FiltroDispositivo[]) => {
-      selecionados = selectedRows
-      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-
-    }
-  };
-
-  console.log(selecionados)
   return (<Layout>
 
 
@@ -311,9 +287,9 @@ function Users({ modelosDB }: Props): JSX.Element {
                 <FormItemDefault
                   name="nome"
                   label="Nome"
-                  rules={[{ required: true, message: 'Por favor, digite um E-mail.' }]}
+                  rules={[{ required: true, message: 'Por favor, digite o nome.' }]}
                 >
-                  <Search placeholder="Nome" onSearch={abrirModalPesquisaUsuario} enterButton />
+                  <Search placeholder="Nome" onSearch={PesquisaUsuario} enterButton />
 
                 </FormItemDefault>
 
@@ -331,7 +307,7 @@ function Users({ modelosDB }: Props): JSX.Element {
                 <FormItemDefault
                   label="Telefone"
                   name="fone"
-                  rules={[{ required: true, message: 'Por favor, insira seu telefone.' }]}
+                  rules={[{ required: true, message: 'Por favor, insira o telefone.' }]}
 
                 >
                   <MaskedInput mask="(11) 1 1111-1111" style={{ width: '100%' }} placeholder="(99) 99999-9999" min={0} max={9999999999} />
@@ -345,12 +321,6 @@ function Users({ modelosDB }: Props): JSX.Element {
                 >
                   <Input.Password />
                 </FormItemDefault>
-
-                <ModalPesquisaUsuario
-                  estadoModalPesquisaUsuario={estadoModalPesquisaUsuario}
-                  quandoApertarOkUsuario={quandoApertarOkUsuario}
-                  quandoApertarCancelUsuario={quandoApertarCancelUsuario}
-                />
 
                 <ModalEditarDispositivo
                   estadoModalEditarDispositivo={estadoModalEditarDispositivo}
@@ -368,10 +338,6 @@ function Users({ modelosDB }: Props): JSX.Element {
             <Col span={12}>
               <GreenButton type="primary" onClick={() => { setDispositivoVaiParaModal(undefined); mostraModalEditDispositivo(); }}> Adicionar Dispositivo </GreenButton>
               <Table
-                rowSelection={{
-                  type: 'checkbox',
-                  ...rowSelection,
-                }}
                 columns={columns}
                 dataSource={usuario ? [...usuario?.dispositivos] : []}
                 pagination={{ pageSize: 4 }}
@@ -385,7 +351,7 @@ function Users({ modelosDB }: Props): JSX.Element {
                 </Button>
 
                 <Popconfirm placement="bottom"
-                  title={'Tem certeza que dejesa excluir?'}
+                  title={'Tem certeza que deseja excluir?'}
                   onConfirm={deletarUsuario}
                   okText="Sim"
                   cancelText="Não">

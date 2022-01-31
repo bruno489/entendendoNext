@@ -117,7 +117,7 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
     console.log(valores)
 
     const item = {
-      _id: valores._id || null,
+      _id: valores._id || undefined,
       nome: valores.nome,
       sensor: valores.sensor || false,
       ligado: valores.ligado || false,
@@ -151,7 +151,7 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
     }).catch(Result=>{console.log(Result)})
 
     const novoDispositivo = {
-      _id: valores._id || null,
+      _id: valores._id || undefined,
       idModelo: valores.idModelo,
       nome: valores.nome,
       itens: itemEnviar,
@@ -203,7 +203,7 @@ export default function ModalEditarDispositivo({ estadoModalEditarDispositivo, c
       <FormItemDefault
         label="Nome"
         name='nome'
-        rules={[{ required: true, message: 'Por favor, digite um nome.' }]}
+        rules={[{ required: true, message: 'Por favor, digite o nome do dispositivo.' }]}
       >
         <Input placeholder="Nome" />
 

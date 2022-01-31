@@ -2,19 +2,17 @@ import React, {useState,useEffect} from 'react'
 import {Form, Input, InputNumber, Row, Switch, Button, Popconfirm, Space, Typography, message } from 'antd'
 import {FormDefault,ColDefault,FormItemDefault,TitleDefault} from '../../styles/Form.styles'
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
-import { InfosMod } from '../componentes/interfaces/infosMod';
+import {FiltroModelo} from '../componentes/interfaces/filtroModelo'
 import api from '../backendApi';
 
 export default function Modelo(){
 
   const [cadModelos]=Form.useForm()
 
-  const [modelo,setModelo] = useState<InfosMod>()
+  const [modelo,setModelo] = useState<FiltroModelo>()
 
   const { Title } = Typography;
   const { Search } = Input;
-
-  
 
   const cancelar =()=>{cadModelos.resetFields()}
 
@@ -46,8 +44,10 @@ export default function Modelo(){
 
   async function onSearch(){
     const key='pesquisa'
+    const nome=cadModelos.getFieldValue("nome")
+    if(nome=='' || !nome){message.error({ content: 'Por favor, digite o nome.', key });return}
     message.loading({ content: 'Um momento, por favor...', key });
-    await api.get(`modelos/${cadModelos.getFieldValue('nome')}`).then((retorno)=>{
+    await api.get(`modelos/${nome}`).then((retorno)=>{
       setModelo(retorno.data)
       message.success({ content: 'Encontrado com sucesso!', key });
     }).catch((retorno)=>{
